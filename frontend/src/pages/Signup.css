@@ -1,0 +1,60 @@
+.signup-container {
+  overflow: hidden;
+}
+
+/* ===== LEFT SIDE ===== */
+.signup-left {
+  background: #f5f5f5;
+}
+
+/* ===== SIGNUP BOX ===== */
+.signup-box {
+  background: #6cc3c3;
+  padding: 40px;
+  border-radius: 30px;
+  width: 350px;
+}
+
+.signup-title {
+  font-size: 28px;
+  margin-bottom: 25px;
+  font-family: "Georgia", serif;
+}
+
+.signup-box input {
+  border-radius: 20px;
+  padding: 10px;
+  border: none;
+}
+
+.signup-btn {
+  background-color: #999;
+  border-radius: 20px;
+  font-weight: bold;
+  border: none;
+}
+
+.signup-btn:hover {
+  background-color: #777;
+  color: white;
+}
+
+/* ===== RIGHT SIDE BACKGROUND ===== */
+.signup-right {
+  background-size: cover;
+  background-position: center;
+  position: relative;
+}
+
+/* Tambahan efek gelombang kiri */
+.signup-right::before {
+  content: "";
+  position: absolute;
+  left: -80px;
+  top: 0;
+  width: 160px;
+  height: 100%;
+  background: white;
+  border-top-right-radius: 100px;
+  border-bottom-right-radius: 100px;
+}
