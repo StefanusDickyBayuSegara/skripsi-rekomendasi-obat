@@ -272,3 +272,53 @@
   from { opacity: 0; transform: scale(0.92); }
   to   { opacity: 1; transform: scale(1); }
 }
+
+/* ════════════════════════════════════════
+   Tambahkan CSS ini ke Recommendation.css
+   ════════════════════════════════════════ */
+
+/* ── Header Top 5 ── */
+.top5-header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #e0f7f8, #f0fafb);
+  border-radius: 14px;
+  border-left: 5px solid #53c5c9;
+}
+
+.top5-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a7a7d;
+}
+
+.top5-subtitle {
+  font-size: 0.78rem;
+  color: #7a9fa0;
+}
+
+/* ── Card Top 5 ── */
+.top5-card {
+  border: 2px solid #53c5c9 !important;
+  box-shadow: 0 6px 20px rgba(83, 197, 201, 0.2) !important;
+  position: relative;
+}
+
+.top5-crown {
+  position: absolute;
+  top: -2px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.3rem;
+  line-height: 1;
+  z-index: 1;
+}
+
+/* ── Badge skor untuk Top 5 ── */
+.skor-badge-top5 {
+  background: linear-gradient(135deg, #53c5c9, #3fb2b6) !important;
+  color: white !important;
+  font-weight: 700;
+}

@@ -64,8 +64,26 @@ function Navbar() {
     if (!editForm.name.trim() || !editForm.email.trim()) {
       setEditMsg("❌ Nama dan email tidak boleh kosong."); return;
     }
-    const updatedUser = { ...user, name: editForm.name.trim(), email: editForm.email.trim(), foto: editForm.foto };
+
+    const updatedUser = {
+      ...user,
+      name: editForm.name.trim(),
+      email: editForm.email.trim(),
+      foto: editForm.foto,
+    };
+
+    // Simpan session aktif
     localStorage.setItem("user", JSON.stringify(updatedUser));
+
+    // ✅ Simpan profil permanen berdasarkan email (bertahan setelah logout)
+    localStorage.setItem(
+      `profile_${editForm.email.trim()}`,
+      JSON.stringify({
+        name: editForm.name.trim(),
+        foto: editForm.foto,
+      })
+    );
+
     setUser(updatedUser);
     setEditMsg("✅ Profil berhasil diperbarui!");
     setTimeout(() => setShowEditModal(false), 1100);
@@ -78,11 +96,9 @@ function Navbar() {
 
   // ── Scroll ke section (untuk landing page) ──
   const scrollTo = (id) => {
-    // Kalau sudah di halaman "/" langsung scroll
     if (location.pathname === "/") {
       document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
     } else {
-      // Kalau di halaman lain, navigate ke "/" dulu lalu scroll
       navigate("/");
       setTimeout(() => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" }), 300);
     }
@@ -254,62 +270,68 @@ function Navbar() {
           display:"flex", justifyContent:"center", alignItems:"center", zIndex:10000,
         }} onClick={() => setShowEditModal(false)}>
           <div style={{
-            background:"white", borderRadius:"22px", width:"440px", maxWidth:"95vw",
-            overflow:"hidden", boxShadow:"0 20px 60px rgba(0,0,0,0.2)",
+            background:"white",
+            borderRadius:"24px",
+            width:"600px",         /* ← diperbesar dari 440px */
+            maxWidth:"95vw",
+            overflow:"hidden",
+            boxShadow:"0 24px 70px rgba(0,0,0,0.22)",
             animation:"dropFade 0.2s ease",
           }} onClick={e => e.stopPropagation()}>
 
-            <div style={{ background:"#53c5c9", padding:"16px 24px" }}>
-              <h5 style={{ color:"white", margin:0, fontWeight:700, fontSize:"1rem" }}>✏️ Edit Profil</h5>
+            {/* Header */}
+            <div style={{ background:"#53c5c9", padding:"20px 32px" }}>
+              <h5 style={{ color:"white", margin:0, fontWeight:700, fontSize:"1.15rem" }}>✏️ Edit Profil</h5>
             </div>
 
-            <div style={{ padding:"24px" }}>
+            <div style={{ padding:"32px" }}>   {/* ← padding diperbesar dari 24px */}
+
               {/* Avatar + upload */}
-              <div style={{ textAlign:"center", marginBottom:"22px" }}>
+              <div style={{ textAlign:"center", marginBottom:"28px" }}>
                 <div style={{ position:"relative", display:"inline-block" }}>
-                  <Avatar foto={editForm.foto} name={editForm.name || user?.name} size={88} />
+                  <Avatar foto={editForm.foto} name={editForm.name || user?.name} size={110} />  {/* ← dari 88px */}
                   <button onClick={() => fileInputRef.current?.click()} title="Ganti foto"
                     style={{
-                      position:"absolute", bottom:2, right:2, width:"30px", height:"30px",
+                      position:"absolute", bottom:4, right:4, width:"34px", height:"34px",
                       borderRadius:"50%", background:"#53c5c9", border:"2.5px solid white",
                       display:"flex", alignItems:"center", justifyContent:"center",
-                      cursor:"pointer", fontSize:"0.78rem", boxShadow:"0 2px 8px rgba(0,0,0,0.15)",
+                      cursor:"pointer", fontSize:"0.85rem", boxShadow:"0 2px 8px rgba(0,0,0,0.15)",
                     }}>📷</button>
                 </div>
-                <div style={{ marginTop:"10px", display:"flex", gap:"14px", justifyContent:"center" }}>
+                <div style={{ marginTop:"12px", display:"flex", gap:"16px", justifyContent:"center" }}>
                   <button onClick={() => fileInputRef.current?.click()}
-                    style={{ background:"none", border:"none", color:"#53c5c9", fontSize:"0.85rem", cursor:"pointer", fontWeight:600, padding:0 }}>
+                    style={{ background:"none", border:"none", color:"#53c5c9", fontSize:"0.9rem", cursor:"pointer", fontWeight:600, padding:0 }}>
                     📷 Ganti Foto
                   </button>
                   {editForm.foto && (
                     <button onClick={handleHapusFoto}
-                      style={{ background:"none", border:"none", color:"#e03333", fontSize:"0.85rem", cursor:"pointer", fontWeight:600, padding:0 }}>
+                      style={{ background:"none", border:"none", color:"#e03333", fontSize:"0.9rem", cursor:"pointer", fontWeight:600, padding:0 }}>
                       🗑️ Hapus Foto
                     </button>
                   )}
                 </div>
-                <p style={{ fontSize:"0.73rem", color:"#bbb", marginTop:"5px", marginBottom:0 }}>Format JPG / PNG · Maks. 2MB</p>
+                <p style={{ fontSize:"0.78rem", color:"#bbb", marginTop:"6px", marginBottom:0 }}>Format JPG / PNG · Maks. 2MB</p>
                 <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp"
                   style={{ display:"none" }} onChange={handleFotoChange} />
               </div>
 
               {/* Nama */}
-              <div style={{ marginBottom:"14px" }}>
-                <label style={{ fontWeight:600, fontSize:"0.9rem", display:"block", marginBottom:"6px" }}>Nama Lengkap</label>
-                <input type="text" className="form-control" placeholder="Masukan nama lengkap"
+              <div style={{ marginBottom:"18px" }}>
+                <label style={{ fontWeight:600, fontSize:"0.95rem", display:"block", marginBottom:"8px" }}>Nama Lengkap</label>
+                <input type="text" className="form-control form-control-lg" placeholder="Masukan nama lengkap"
                   value={editForm.name} onChange={e => setEditForm({ ...editForm, name: e.target.value })} />
               </div>
 
               {/* Email */}
-              <div style={{ marginBottom:"14px" }}>
-                <label style={{ fontWeight:600, fontSize:"0.9rem", display:"block", marginBottom:"6px" }}>Email</label>
-                <input type="email" className="form-control" placeholder="Masukan email"
+              <div style={{ marginBottom:"18px" }}>
+                <label style={{ fontWeight:600, fontSize:"0.95rem", display:"block", marginBottom:"8px" }}>Email</label>
+                <input type="email" className="form-control form-control-lg" placeholder="Masukan email"
                   value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} />
               </div>
 
               {editMsg && (
                 <div style={{
-                  padding:"10px 14px", borderRadius:"10px", fontSize:"0.88rem",
+                  padding:"12px 16px", borderRadius:"10px", fontSize:"0.92rem",
                   background: editMsg.startsWith("✅") ? "#f0fafb" : "#fff5f5",
                   color: editMsg.startsWith("✅") ? "#2a9d8f" : "#cc0000",
                   border: `1px solid ${editMsg.startsWith("✅") ? "#b2ebef" : "#ffcccc"}`,
@@ -317,9 +339,10 @@ function Navbar() {
               )}
             </div>
 
-            <div style={{ padding:"14px 24px", borderTop:"1px solid #eee", display:"flex", gap:"10px", justifyContent:"flex-end" }}>
-              <button className="btn btn-secondary" onClick={() => setShowEditModal(false)}>Batal</button>
-              <button className="btn btn-info text-white fw-semibold" onClick={handleSaveEdit}>💾 Simpan</button>
+            {/* Footer tombol */}
+            <div style={{ padding:"16px 32px", borderTop:"1px solid #eee", display:"flex", gap:"12px", justifyContent:"flex-end" }}>
+              <button className="btn btn-secondary btn-lg px-4" onClick={() => setShowEditModal(false)}>Batal</button>
+              <button className="btn btn-info btn-lg px-4 text-white fw-semibold" onClick={handleSaveEdit}>💾 Simpan</button>
             </div>
           </div>
         </div>

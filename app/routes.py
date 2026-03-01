@@ -7,14 +7,29 @@ import re
 import os
 
 # ════════════════════════════════════════════════════
-# HELPER: Tokenisasi
+# STOPWORDS INDONESIA
+# ════════════════════════════════════════════════════
+STOPWORDS_ID = {
+    "dan", "atau", "yang", "untuk", "dengan", "pada", "di", "ke", "dari",
+    "ini", "itu", "adalah", "dalam", "tidak", "ada", "juga", "serta",
+    "oleh", "karena", "akibat", "dapat", "bisa", "akan", "telah", "sudah",
+    "saat", "bila", "jika", "maka", "agar", "seperti", "antara", "setelah",
+    "sebelum", "namun", "tetapi", "tapi", "sehingga", "sebagai", "lebih",
+    "sangat", "harus", "perlu", "secara", "terhadap", "selama",
+    "pasien", "penderita", "obat", "dosis", "penggunaan", "digunakan",
+}
+
+
+# ════════════════════════════════════════════════════
+# HELPER: Tokenisasi + hapus stopwords
 # ════════════════════════════════════════════════════
 def tokenize(text):
     if not text:
         return []
     text = text.lower()
     text = re.sub(r'[^a-z0-9\s]', ' ', text)
-    return [t for t in text.split() if len(t) > 1]
+    tokens = [t for t in text.split() if len(t) > 1]
+    return [t for t in tokens if t not in STOPWORDS_ID]
 
 
 # ════════════════════════════════════════════════════
@@ -76,8 +91,19 @@ def cek_darurat(keluhan_text):
 
 # ════════════════════════════════════════════════════
 # FILTER KEAMANAN
+#
+# Kategori kehamilan (FDA/BPOM):
+#   A = aman terbukti
+#   B = aman pada hewan, belum cukup data manusia  → AMAN
+#   C = risiko tidak dapat dikesampingkan          → BOLEH + peringatan
+#   D = bukti risiko pada janin manusia            → BLOKIR
+#   X = kontraindikasi absolut pada kehamilan      → BLOKIR
 # ════════════════════════════════════════════════════
+KET_HAMIL_BLOKIR     = {"d", "x"}
+KET_HAMIL_PERINGATAN = {"c"}
+
 def lolos_filter(obat, usia, jenis_kelamin, status_hamil, riwayat_penyakit):
+    # ── Filter usia minimum ──
     if usia:
         batasan = (obat.batasan_usia_min or "").strip()
         if batasan and batasan != "-":
@@ -88,11 +114,13 @@ def lolos_filter(obat, usia, jenis_kelamin, status_hamil, riwayat_penyakit):
             except:
                 pass
 
+    # ── Filter kehamilan (D dan X diblokir) ──
     if jenis_kelamin == "perempuan" and status_hamil == "hamil":
         ket = (obat.ket_hamil or "").strip().lower()
-        if ket == "d":
+        if ket in KET_HAMIL_BLOKIR:
             return False
 
+    # ── Filter riwayat penyakit / kontraindikasi ──
     if riwayat_penyakit:
         kontra = (obat.kontraindikasi_clean or "").lower()
         for penyakit in riwayat_penyakit.split(","):
@@ -101,6 +129,15 @@ def lolos_filter(obat, usia, jenis_kelamin, status_hamil, riwayat_penyakit):
                 return False
 
     return True
+
+
+def get_peringatan_hamil(obat, jenis_kelamin, status_hamil):
+    """Return peringatan jika kategori C (risiko tidak dapat dikesampingkan)"""
+    if jenis_kelamin == "perempuan" and status_hamil == "hamil":
+        ket = (obat.ket_hamil or "").strip().lower()
+        if ket in KET_HAMIL_PERINGATAN:
+            return "⚠️ Kategori C: Gunakan hanya jika manfaat lebih besar dari risiko. Konsultasikan dengan dokter."
+    return None
 
 
 # ════════════════════════════════════════════════════
@@ -121,29 +158,21 @@ def hitung_skor_relevansi(keluhan_tokens, indikasi_tokens, cosine_score):
     if precision + recall > 0:
         f1 = 2 * precision * recall / (precision + recall)
 
-    skor_akhir = (0.6 * cosine_score) + (0.4 * f1)
+    skor_akhir = (0.65 * cosine_score) + (0.35 * f1)
     return round(skor_akhir, 4)
 
 
 # ════════════════════════════════════════════════════
-# ✅ HELPER: Cek gambar lokal + generate placeholder
+# HELPER: Cek gambar lokal + fallback
 # ════════════════════════════════════════════════════
 FOLDER_GAMBAR = os.path.join(os.path.dirname(__file__), "static", "images")
 
 def get_gambar_fallback(nama_obat, gambar_db):
-    """
-    Prioritas gambar:
-    1. Gambar lokal dari DB  (static/images/namafile.jpg)
-    2. Cek file lokal dengan nama obat
-    3. Placeholder otomatis dengan nama obat
-    """
-    # Prioritas 1: gambar dari kolom DB
     if gambar_db:
         path = os.path.join(FOLDER_GAMBAR, gambar_db)
         if os.path.exists(path):
-            return gambar_db  # kembalikan nama file saja, frontend tambah base URL
+            return gambar_db
 
-    # Prioritas 2: cek file lokal berdasarkan nama obat
     nama_file_coba = [
         nama_obat.lower().replace(" ", "_") + ".jpg",
         nama_obat.lower().replace(" ", "_") + ".png",
@@ -155,20 +184,14 @@ def get_gambar_fallback(nama_obat, gambar_db):
         if os.path.exists(path):
             return nama_file
 
-    # Prioritas 3: placeholder (tidak perlu internet)
-    return None  # frontend akan handle placeholder
+    return None
 
 
 # ════════════════════════════════════════════════════
-# ✅ ENDPOINT: Gambar fallback (ganti BPOM)
+# ENDPOINT: Gambar fallback
 # ════════════════════════════════════════════════════
 @app.route("/api/gambar-bpom", methods=["GET"])
 def get_gambar_bpom():
-    """
-    Endpoint fallback gambar.
-    Cek lokal dulu, kalau tidak ada return None
-    → frontend akan tampilkan placeholder otomatis
-    """
     nama = request.args.get("nama", "").strip()
     if not nama:
         return jsonify({"gambar": None}), 400
@@ -182,7 +205,6 @@ def get_gambar_bpom():
             "nama_obat": nama,
         }), 200
     else:
-        # Tidak ada gambar → return None, frontend pakai placeholder
         return jsonify({
             "gambar"   : None,
             "sumber"   : "tidak_ada",
@@ -230,13 +252,15 @@ def get_rekomendasi():
     status_hamil     = data.get("status_hamil", "tidak")
     riwayat_penyakit = data.get("riwayat_penyakit", "").lower()
 
+    # ── Cek darurat dulu ──
     if cek_darurat(keluhan):
         return jsonify({"darurat": True}), 200
 
     obat_list = Obat.query.all()
     if not obat_list:
-        return jsonify({"darurat": False, "hasil": []}), 200
+        return jsonify({"darurat": False, "top5": [], "hasil": []}), 200
 
+    # ── Hitung TF-IDF ──
     keluhan_tokens        = tokenize(keluhan)
     semua_indikasi_tokens = [tokenize(o.indikasi_clean) for o in obat_list]
     idf                   = hitung_idf(semua_indikasi_tokens)
@@ -258,8 +282,8 @@ def get_rekomendasi():
 
         skor = hitung_skor_relevansi(keluhan_tokens, indikasi_tokens, cosine)
 
-        # ✅ Cek gambar lokal
-        gambar_final = get_gambar_fallback(obat.nama_obat, obat.gambar)
+        peringatan_hamil = get_peringatan_hamil(obat, jenis_kelamin, status_hamil)
+        gambar_final     = get_gambar_fallback(obat.nama_obat, obat.gambar)
 
         kandidat.append({
             "id"                  : obat.id,
@@ -278,10 +302,39 @@ def get_rekomendasi():
             "gambar"              : gambar_final,
             "skor"                : skor,
             "cosine"              : round(cosine, 4),
+            "peringatan_hamil"    : peringatan_hamil,
         })
 
-    kandidat.sort(key=lambda x: x["skor"], reverse=True)
-    return jsonify({"darurat": False, "hasil": kandidat[:20]}), 200
+    # ════════════════════════════════════════════════
+    # ✅ SORT dengan tie-breaker 3 level yang BENAR:
+    #
+    #   Masalah versi lama:
+    #   - reverse=True pada nama_obat → urutan Z→A (terbalik!)
+    #   - "pimacolin" menang atas "coparcetin" padahal harusnya sebaliknya
+    #
+    #   Solusi: pisahkan sort — skor & cosine descending dulu,
+    #   lalu sort stabil kedua khusus nama ascending (A→Z)
+    #
+    #   Level 1: skor akhir          → DESCENDING (terbesar duluan)
+    #   Level 2: cosine similarity   → DESCENDING (terbesar duluan)
+    #   Level 3: nama obat           → ASCENDING  (A → Z, adil & konsisten)
+    # ════════════════════════════════════════════════
+
+    # Step 1: sort nama A→Z dulu (ascending) — sebagai tie-breaker terakhir
+    kandidat.sort(key=lambda x: x["nama_obat"])
+
+    # Step 2: sort skor + cosine descending — Python sort bersifat STABLE,
+    # jadi urutan nama dari step 1 dipertahankan saat skor & cosine sama
+    kandidat.sort(key=lambda x: (x["skor"], x["cosine"]), reverse=True)
+
+    top5  = kandidat[:5]
+    semua = kandidat[:20]
+
+    return jsonify({
+        "darurat": False,
+        "top5"   : top5,
+        "hasil"  : semua,
+    }), 200
 
 
 # ════════════════════════════════════════════════════

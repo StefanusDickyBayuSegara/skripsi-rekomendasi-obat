@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState } from "react";
 import Navbar from "../components/Navbar";
 import { useSavedList } from "../hooks/Usesavedlist";
 import "./Recommendation.css";
@@ -39,6 +39,60 @@ function ObatImage({ gambar, namaObat, height = "80px" }) {
 }
 
 // ════════════════════════════════════════════════════
+// Komponen Card Obat — reusable untuk Top5 & semua hasil
+// ════════════════════════════════════════════════════
+function ObatCard({ item, index, isSaved, onToggleSave, onDetail, isTop5 = false }) {
+  return (
+    <div className={`card medicine-card h-100 text-center shadow-sm ${isTop5 ? "top5-card" : ""}`}>
+      {isTop5 && (
+        <div className="top5-crown">
+          {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
+        </div>
+      )}
+      {!isTop5 && <div className="rank-badge">#{index + 1}</div>}
+
+      <button
+        className={`bookmark-btn ${isSaved(item.id) ? "bookmark-active" : ""}`}
+        onClick={(e) => onToggleSave(e, item)}
+        title={isSaved(item.id) ? "Hapus dari simpan" : "Simpan obat ini"}
+      >
+        🔖
+      </button>
+
+      <div className="medicine-image-wrap p-2">
+        <ObatImage gambar={item.gambar} namaObat={item.nama_obat} height={isTop5 ? "100px" : "80px"} />
+      </div>
+
+      <div className="card-body p-2 d-flex flex-column">
+        <p className="medicine-name mb-1">{item.nama_obat}</p>
+        <small className="text-muted mb-1">{item.kategori_penyakit || "-"}</small>
+
+        {/* ✅ Tampilkan peringatan hamil kategori C */}
+        {item.peringatan_hamil && (
+          <div style={{
+            fontSize: "0.65rem", color: "#b45309", background: "#fffbeb",
+            border: "1px solid #fcd34d", borderRadius: "6px",
+            padding: "3px 5px", marginBottom: "4px", textAlign: "left", lineHeight: "1.3",
+          }}>
+            {item.peringatan_hamil}
+          </div>
+        )}
+
+        <div className={`skor-badge mb-2 ${isTop5 ? "skor-badge-top5" : ""}`}>
+          Skor: {(item.skor * 100).toFixed(1)}%
+        </div>
+        <button
+          className="btn btn-info btn-sm text-white mt-auto detail-btn"
+          onClick={() => onDetail(item)}
+        >
+          Detail
+        </button>
+      </div>
+    </div>
+  );
+}
+
+// ════════════════════════════════════════════════════
 // Main Component
 // ════════════════════════════════════════════════════
 function Recommendation() {
@@ -54,7 +108,8 @@ function Recommendation() {
   const [loading, setLoading]       = useState(false);
   const [sudahCari, setSudahCari]   = useState(false);
   const [isDarurat, setIsDarurat]   = useState(false);
-  const [hasilObat, setHasilObat]   = useState([]);
+  const [top5Obat, setTop5Obat]     = useState([]);     // ✅ top 5
+  const [hasilObat, setHasilObat]   = useState([]);     // semua (max 20)
   const [selectedObat, setSelectedObat] = useState(null);
   const [toastMsg, setToastMsg]     = useState("");
 
@@ -89,6 +144,7 @@ function Recommendation() {
     setLoading(true);
     setSudahCari(true);
     setIsDarurat(false);
+    setTop5Obat([]);
     setHasilObat([]);
 
     fetch("http://localhost:5000/api/rekomendasi", {
@@ -104,14 +160,21 @@ function Recommendation() {
     })
       .then((res) => res.json())
       .then((data) => {
-        if (data.darurat) setIsDarurat(true);
-        else setHasilObat(data.hasil || []);
+        if (data.darurat) {
+          setIsDarurat(true);
+        } else {
+          setTop5Obat(data.top5 || []);    // ✅ ambil top5
+          setHasilObat(data.hasil || []);
+        }
         setLoading(false);
       })
       .catch((err) => { console.log("Error:", err); setLoading(false); });
   };
 
   const handleKeyDown = (e) => { if (e.key === "Enter") handleCari(); };
+
+  // Hasil di luar top5 (ranking 6-20)
+  const hasilLainnya = hasilObat.slice(5);
 
   return (
     <div className="recommendation-page">
@@ -206,59 +269,58 @@ function Recommendation() {
           </div>
         )}
 
-        {/* Hasil Obat */}
-        {!loading && !isDarurat && (
+        {/* ════ HASIL ════ */}
+        {!loading && !isDarurat && sudahCari && (
           <>
-            {sudahCari && (
-              <h5 className="fw-bold mb-3">
-                {hasilObat.length > 0
-                  ? `Hasil Rekomendasi (${hasilObat.length} obat ditemukan)`
-                  : "Hasil Obat Anda"}
-              </h5>
-            )}
-
-            {sudahCari && hasilObat.length === 0 && (
+            {hasilObat.length === 0 ? (
               <div className="alert alert-warning text-center mt-3">
                 😕 Tidak ada obat yang cocok dengan keluhan dan profil Anda.
                 <br /><small className="text-muted">Coba masukkan keluhan yang lebih spesifik.</small>
               </div>
-            )}
-
-            <div className="row g-3">
-              {hasilObat.map((item, index) => (
-                <div className="col-lg-2 col-md-3 col-sm-4 col-6" key={item.id}>
-                  <div className="card medicine-card h-100 text-center shadow-sm">
-
-                    <div className="rank-badge">#{index + 1}</div>
-
-                    {/* ✅ ICON BOOKMARK */}
-                    <button
-                      className={`bookmark-btn ${isSaved(item.id) ? "bookmark-active" : ""}`}
-                      onClick={(e) => handleToggleSave(e, item)}
-                      title={isSaved(item.id) ? "Hapus dari simpan" : "Simpan obat ini"}
-                    >
-                      🔖
-                    </button>
-
-                    <div className="medicine-image-wrap p-2">
-                      <ObatImage gambar={item.gambar} namaObat={item.nama_obat} height="80px" />
+            ) : (
+              <>
+                {/* ══ SEKSI TOP 5 ══ */}
+                {top5Obat.length > 0 && (
+                  <div className="mb-5">
+                    <div className="top5-header mb-3">
+                      <span className="top5-title">🏆 Top 5 Rekomendasi Terbaik</span>
+                      <span className="top5-subtitle">Diurutkan berdasarkan skor TF-IDF + Cosine Similarity tertinggi</span>
                     </div>
-
-                    <div className="card-body p-2 d-flex flex-column">
-                      <p className="medicine-name mb-1">{item.nama_obat}</p>
-                      <small className="text-muted mb-1">{item.kategori_penyakit || "-"}</small>
-                      <div className="skor-badge mb-2">Skor: {(item.skor * 100).toFixed(1)}%</div>
-                      <button
-                        className="btn btn-info btn-sm text-white mt-auto detail-btn"
-                        onClick={() => setSelectedObat(item)}
-                      >
-                        Detail
-                      </button>
+                    <div className="row g-3 justify-content-center">
+                      {top5Obat.map((item, index) => (
+                        <div className="col-lg-2 col-md-3 col-sm-4 col-6" key={item.id}>
+                          <ObatCard
+                            item={item} index={index}
+                            isSaved={isSaved} onToggleSave={handleToggleSave}
+                            onDetail={setSelectedObat} isTop5={true}
+                          />
+                        </div>
+                      ))}
                     </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                )}
+
+                {/* ══ SEKSI SEMUA HASIL (rank 6–20) ══ */}
+                {hasilLainnya.length > 0 && (
+                  <div>
+                    <h5 className="fw-bold mb-3" style={{ color: "#555" }}>
+                      📋 Rekomendasi Lainnya ({hasilLainnya.length} obat)
+                    </h5>
+                    <div className="row g-3">
+                      {hasilLainnya.map((item, index) => (
+                        <div className="col-lg-2 col-md-3 col-sm-4 col-6" key={item.id}>
+                          <ObatCard
+                            item={item} index={index + 5}
+                            isSaved={isSaved} onToggleSave={handleToggleSave}
+                            onDetail={setSelectedObat} isTop5={false}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
           </>
         )}
       </div>
@@ -351,6 +413,18 @@ function Recommendation() {
                   Cosine: {(selectedObat.cosine * 100).toFixed(1)}%
                 </span>
               </div>
+
+              {/* ✅ Peringatan hamil di modal detail */}
+              {selectedObat.peringatan_hamil && (
+                <div style={{
+                  padding: "10px 14px", borderRadius: "10px", fontSize: "0.85rem",
+                  background: "#fffbeb", color: "#92400e",
+                  border: "1px solid #fcd34d", marginBottom: "12px",
+                }}>
+                  {selectedObat.peringatan_hamil}
+                </div>
+              )}
+
               <div className="modal-detail-body text-start">
                 {[
                   { label: "Nama Obat",        value: selectedObat.nama_obat            },
@@ -363,6 +437,7 @@ function Recommendation() {
                   { label: "Kontra Indikasi",   value: selectedObat.kontraindikasi_clean },
                   { label: "Jangka Waktu",      value: selectedObat.jangka_waktu_clean   },
                   { label: "Status Obat",       value: selectedObat.status_obat_label    },
+                  { label: "Kat. Kehamilan",    value: selectedObat.ket_hamil            },  // ✅ tambah info ket_hamil
                 ].map((row) => (
                   <div className="detail-row" key={row.label}>
                     <span className="detail-label">{row.label}</span>
@@ -372,7 +447,6 @@ function Recommendation() {
               </div>
             </div>
             <div className="modal-footer-custom">
-              {/* ✅ Tombol Simpan di Modal */}
               <button
                 className={`btn fw-semibold ${isSaved(selectedObat.id) ? "btn-simpan-active" : "btn-simpan"}`}
                 onClick={(e) => handleToggleSave(e, selectedObat)}

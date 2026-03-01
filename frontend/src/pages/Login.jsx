@@ -29,10 +29,17 @@ function Login() {
       if (response.ok) {
       alert("Login berhasil!");
 
-      // simpan user ke localStorage
-      localStorage.setItem("user", JSON.stringify(data.user));
+      // ✅ Cek apakah ada data profil yang pernah diedit untuk email ini
+      const savedProfile = JSON.parse(
+        localStorage.getItem(`profile_${data.user.email}`)
+      );
 
-      // redirect ke recommendation
+      // Merge: data server sebagai base, profil tersimpan sebagai override
+      const finalUser = savedProfile
+        ? { ...data.user, name: savedProfile.name, foto: savedProfile.foto }
+        : data.user;
+
+      localStorage.setItem("user", JSON.stringify(finalUser));
       window.location.href = "/recommendation";
     }
 
