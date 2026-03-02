@@ -1,4 +1,4 @@
-from app import db
+from backend import db
 
 class Obat(db.Model):
     __tablename__ = "data_obat_hasil_preprocessing_ver_4_3"

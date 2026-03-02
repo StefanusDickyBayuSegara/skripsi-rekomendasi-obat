@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-app = Flask(__name__, static_folder='../static')  # ← ubah di sini saja
+app = Flask(__name__, static_folder='../static')
 app.config.from_object(Config)
 
 CORS(app)
@@ -15,5 +15,6 @@ CORS(app)
 db = SQLAlchemy(app)
 migrate = Migrate(app, db)
 
-from app.model import user
-from app import routes
+from backend.model import user
+from backend.routes.routes import register_routes
+register_routes(app)
