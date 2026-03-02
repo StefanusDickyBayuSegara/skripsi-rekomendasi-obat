@@ -7,35 +7,23 @@ function SavedList() {
   const [search, setSearch]             = useState("");
   const [selectedObat, setSelectedObat] = useState(null);
 
-  // ════════════════════════════════
-  // Load dari localStorage
-  // ════════════════════════════════
   useEffect(() => {
     const data = JSON.parse(localStorage.getItem("savedObat") || "[]");
     setSavedList(data);
   }, []);
 
-  // ════════════════════════════════
-  // Hapus obat dari list
-  // ════════════════════════════════
   const handleHapus = (id) => {
     const updated = savedList.filter((item) => item.id !== id);
     setSavedList(updated);
     localStorage.setItem("savedObat", JSON.stringify(updated));
   };
 
-  // ════════════════════════════════
-  // Filter pencarian
-  // ════════════════════════════════
   const filtered = savedList.filter((item) =>
     (item.nama_obat || item.name || "")
       .toLowerCase()
       .includes(search.toLowerCase())
   );
 
-  // ════════════════════════════════
-  // Helper ambil nilai field
-  // ════════════════════════════════
   const get = (item, ...keys) => {
     for (const k of keys) {
       if (item[k] && item[k] !== "-") return item[k];
@@ -63,7 +51,8 @@ function SavedList() {
     <div className="savedlist-page">
       <Navbar />
 
-      <div className="container mt-4 pb-5">
+      {/* ✅ container-fluid px-4 — sama seperti SearchMedicine & Recommendation */}
+      <div className="container-fluid px-4 mt-4 pb-5">
         <h4 className="savedlist-title">Daftar Simpan</h4>
 
         {/* Search */}
@@ -77,9 +66,7 @@ function SavedList() {
             onChange={(e) => setSearch(e.target.value)}
           />
           {search && (
-            <button className="search-clear" onClick={() => setSearch("")}>
-              ✕
-            </button>
+            <button className="search-clear" onClick={() => setSearch("")}>✕</button>
           )}
         </div>
 
@@ -113,19 +100,18 @@ function SavedList() {
           </div>
         )}
 
-        {/* Grid Obat Tersimpan */}
+        {/* ✅ Grid — col-xl-2 agar 6 kolom di layar lebar, konsisten */}
         <div className="row g-3 mt-1">
           {filtered.map((item) => {
-            const namaObat = getNamaObat(item);
+            const namaObat  = getNamaObat(item);
             const gambarSrc = getGambar(item);
-            const inisial = namaObat
+            const inisial   = namaObat
               .split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
             return (
-              <div className="col-lg-3 col-md-4 col-sm-6 col-6" key={item.id}>
+              <div className="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-6" key={item.id}>
                 <div className="card saved-card h-100 shadow-sm">
 
-                  {/* Icon Bookmark sudah tersimpan */}
                   <div className="bookmark-icon saved">🔖</div>
 
                   {/* Gambar */}
@@ -149,22 +135,13 @@ function SavedList() {
                   {/* Info */}
                   <div className="card-body p-2 d-flex flex-column text-center">
                     <p className="saved-name mb-1">{namaObat}</p>
-                    <small className="saved-kategori fw-bold mb-2">
-                      {getKategori(item)}
-                    </small>
+                    <small className="saved-kategori fw-bold mb-2">{getKategori(item)}</small>
 
-                    {/* Tombol */}
                     <div className="d-flex gap-2 mt-auto">
-                      <button
-                        className="btn btn-detail flex-fill"
-                        onClick={() => setSelectedObat(item)}
-                      >
+                      <button className="btn btn-detail flex-fill" onClick={() => setSelectedObat(item)}>
                         Detail
                       </button>
-                      <button
-                        className="btn btn-hapus flex-fill"
-                        onClick={() => handleHapus(item.id)}
-                      >
+                      <button className="btn btn-hapus flex-fill" onClick={() => handleHapus(item.id)}>
                         Hapus
                       </button>
                     </div>
@@ -176,20 +153,14 @@ function SavedList() {
         </div>
       </div>
 
-      {/* ════════════════════════════════
-          MODAL DETAIL OBAT
-      ════════════════════════════════ */}
+      {/* ════ MODAL DETAIL ════ */}
       {selectedObat && (
         <div className="modal-overlay" onClick={() => setSelectedObat(null)}>
           <div className="modal-box shadow-lg" onClick={(e) => e.stopPropagation()}>
-
             <div className="modal-header-custom">
               <h5 className="modal-title-custom">Detail Obat</h5>
             </div>
-
             <div className="modal-body-custom">
-
-              {/* Gambar */}
               <div className="text-center mb-3">
                 <div className="modal-image-wrap mx-auto">
                   {getGambar(selectedObat) ? (
@@ -209,8 +180,6 @@ function SavedList() {
                 </div>
                 <p className="text-muted small mt-2">Informasi Produk</p>
               </div>
-
-              {/* Detail rows */}
               <div className="modal-detail-body text-start">
                 {[
                   { label: "Nama Obat",        value: getNamaObat(selectedObat)  },
@@ -231,21 +200,14 @@ function SavedList() {
                 ))}
               </div>
             </div>
-
             <div className="modal-footer-custom">
               <button
                 className="btn btn-hapus-modal"
-                onClick={() => {
-                  handleHapus(selectedObat.id);
-                  setSelectedObat(null);
-                }}
+                onClick={() => { handleHapus(selectedObat.id); setSelectedObat(null); }}
               >
                 🗑️ Hapus dari Simpan
               </button>
-              <button
-                className="btn btn-info text-white"
-                onClick={() => setSelectedObat(null)}
-              >
+              <button className="btn btn-info text-white" onClick={() => setSelectedObat(null)}>
                 Tutup
               </button>
             </div>

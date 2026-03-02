@@ -87,17 +87,18 @@ function SearchMedicine() {
       {/* Toast */}
       {toastMsg && <div className="save-toast">{toastMsg}</div>}
 
-      <div className="search-page container mt-4">
+      {/* ✅ container-fluid + px-4 agar full lebar layar */}
+      <div className="search-page container-fluid px-4 mt-4">
         <h4 className="fw-bold">Pencarian Obat</h4>
 
+        {/* Search Bar */}
         <div className="search-bar mt-3 d-flex justify-content-center gap-2">
           <input
             type="text" placeholder="Masukan Nama Obat..."
             value={search} onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={handleKeyDown} className="form-control"
-            style={{ maxWidth: "350px" }}
+            onKeyDown={handleKeyDown} className="form-control search-input"
           />
-          <button className="btn btn-info text-white" onClick={handleSearch}>Cari</button>
+          <button className="btn btn-info text-white px-4" onClick={handleSearch}>Cari</button>
         </div>
 
         <h5 className="mt-4 text-center">
@@ -114,27 +115,27 @@ function SearchMedicine() {
           </div>
         )}
 
-        <div className="row mt-3">
+        {/* ✅ Grid card — col-xl-2 agar 6 kolom di layar lebar */}
+        <div className="row mt-3 g-3">
           {filteredMedicine.map((item) => (
-            <div className="col-lg-3 col-md-4 col-sm-6 mb-4" key={item.id}>
+            <div className="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-6" key={item.id}>
               <div className="card medicine-card h-100 shadow-sm">
 
-                {/* ✅ ICON BOOKMARK */}
                 <button
                   className={`bookmark-btn ${isSaved(item.id) ? "bookmark-active" : ""}`}
                   onClick={(e) => handleToggleSave(e, item)}
                   title={isSaved(item.id) ? "Hapus dari simpan" : "Simpan obat ini"}
                 >
-                  {isSaved(item.id) ? "🔖" : "🔖"}
+                  🔖
                 </button>
 
                 <div className="text-center p-3">
                   <ObatImg src={item.image} name={item.name} height="100px" />
                 </div>
-                <div className="card-body text-center d-flex flex-column">
-                  <h6 className="fw-bold">{item.name}</h6>
+                <div className="card-body text-center d-flex flex-column p-2">
+                  <h6 className="fw-bold medicine-name">{item.name}</h6>
                   <small className="text-muted mb-2">{item.kategori}</small>
-                  <button className="btn btn-info mt-auto text-white" onClick={() => setSelectedMedicine(item)}>
+                  <button className="btn btn-info mt-auto text-white btn-sm" onClick={() => setSelectedMedicine(item)}>
                     Detail
                   </button>
                 </div>
@@ -172,7 +173,6 @@ function SearchMedicine() {
                 </div>
               ))}
             </div>
-            {/* ✅ Tombol Simpan di Modal */}
             <div className="d-flex gap-2 mt-3">
               <button
                 className={`btn flex-fill fw-semibold ${isSaved(selectedMedicine.id) ? "btn-simpan-active" : "btn-simpan"}`}

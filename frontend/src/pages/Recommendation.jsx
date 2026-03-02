@@ -67,7 +67,6 @@ function ObatCard({ item, index, isSaved, onToggleSave, onDetail, isTop5 = false
         <p className="medicine-name mb-1">{item.nama_obat}</p>
         <small className="text-muted mb-1">{item.kategori_penyakit || "-"}</small>
 
-        {/* ✅ Tampilkan peringatan hamil kategori C */}
         {item.peringatan_hamil && (
           <div style={{
             fontSize: "0.65rem", color: "#b45309", background: "#fffbeb",
@@ -108,8 +107,8 @@ function Recommendation() {
   const [loading, setLoading]       = useState(false);
   const [sudahCari, setSudahCari]   = useState(false);
   const [isDarurat, setIsDarurat]   = useState(false);
-  const [top5Obat, setTop5Obat]     = useState([]);     // ✅ top 5
-  const [hasilObat, setHasilObat]   = useState([]);     // semua (max 20)
+  const [top5Obat, setTop5Obat]     = useState([]);
+  const [hasilObat, setHasilObat]   = useState([]);
   const [selectedObat, setSelectedObat] = useState(null);
   const [toastMsg, setToastMsg]     = useState("");
 
@@ -163,7 +162,7 @@ function Recommendation() {
         if (data.darurat) {
           setIsDarurat(true);
         } else {
-          setTop5Obat(data.top5 || []);    // ✅ ambil top5
+          setTop5Obat(data.top5 || []);
           setHasilObat(data.hasil || []);
         }
         setLoading(false);
@@ -173,17 +172,16 @@ function Recommendation() {
 
   const handleKeyDown = (e) => { if (e.key === "Enter") handleCari(); };
 
-  // Hasil di luar top5 (ranking 6-20)
   const hasilLainnya = hasilObat.slice(5);
 
   return (
     <div className="recommendation-page">
       <Navbar />
 
-      {/* Toast */}
       {toastMsg && <div className="save-toast">{toastMsg}</div>}
 
-      <div className="container mt-4 pb-5">
+      {/* ✅ container-fluid px-4 — sama seperti SearchMedicine */}
+      <div className="container-fluid px-4 mt-4 pb-5">
         <h4 className="page-title mb-4">Cari Rekomendasi Obat Anda</h4>
 
         {/* ════ Card Profil ════ */}
@@ -286,9 +284,10 @@ function Recommendation() {
                       <span className="top5-title">🏆 Top 5 Rekomendasi Terbaik</span>
                       <span className="top5-subtitle">Diurutkan berdasarkan skor TF-IDF + Cosine Similarity tertinggi</span>
                     </div>
-                    <div className="row g-3 justify-content-center">
+                    {/* ✅ col-xl-2 agar 6 kolom di layar lebar, sama seperti SearchMedicine */}
+                    <div className="row g-3">
                       {top5Obat.map((item, index) => (
-                        <div className="col-lg-2 col-md-3 col-sm-4 col-6" key={item.id}>
+                        <div className="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-6" key={item.id}>
                           <ObatCard
                             item={item} index={index}
                             isSaved={isSaved} onToggleSave={handleToggleSave}
@@ -306,9 +305,10 @@ function Recommendation() {
                     <h5 className="fw-bold mb-3" style={{ color: "#555" }}>
                       📋 Rekomendasi Lainnya ({hasilLainnya.length} obat)
                     </h5>
+                    {/* ✅ col-xl-2 konsisten */}
                     <div className="row g-3">
                       {hasilLainnya.map((item, index) => (
-                        <div className="col-lg-2 col-md-3 col-sm-4 col-6" key={item.id}>
+                        <div className="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-6" key={item.id}>
                           <ObatCard
                             item={item} index={index + 5}
                             isSaved={isSaved} onToggleSave={handleToggleSave}
@@ -414,7 +414,6 @@ function Recommendation() {
                 </span>
               </div>
 
-              {/* ✅ Peringatan hamil di modal detail */}
               {selectedObat.peringatan_hamil && (
                 <div style={{
                   padding: "10px 14px", borderRadius: "10px", fontSize: "0.85rem",
@@ -437,7 +436,7 @@ function Recommendation() {
                   { label: "Kontra Indikasi",   value: selectedObat.kontraindikasi_clean },
                   { label: "Jangka Waktu",      value: selectedObat.jangka_waktu_clean   },
                   { label: "Status Obat",       value: selectedObat.status_obat_label    },
-                  { label: "Kat. Kehamilan",    value: selectedObat.ket_hamil            },  // ✅ tambah info ket_hamil
+                  { label: "Kat. Kehamilan",    value: selectedObat.ket_hamil            },
                 ].map((row) => (
                   <div className="detail-row" key={row.label}>
                     <span className="detail-label">{row.label}</span>
