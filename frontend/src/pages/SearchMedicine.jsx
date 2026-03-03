@@ -6,6 +6,7 @@ import "./SearchMedicine.css";
 function SearchMedicine() {
   const [search, setSearch]                     = useState("");
   const [submittedSearch, setSubmittedSearch]   = useState("");
+  const [selectedKategori, setSelectedKategori] = useState(""); // filter kategori_obat
   const [selectedMedicine, setSelectedMedicine] = useState(null);
   const [medicines, setMedicines]               = useState([]);
   const [loading, setLoading]                   = useState(true);
@@ -20,6 +21,9 @@ function SearchMedicine() {
         const formattedData = data.map((item) => ({
           id            : item.id,
           name          : item.nama_obat           ?? "Tanpa Nama",
+          // ✅ kategori_obat untuk filter jenis obat (tablet, sirup, dll)
+          kategoriObat  : item.kategori_obat       ?? "-",
+          // kategori_penyakit tetap untuk info penyakit di card & modal
           kategori      : item.kategori_penyakit   ?? "-",
           indikasi      : item.indikasi_clean       ?? "-",
           dosisAnak     : item.dosis_anak_clean     ?? "-",
@@ -40,12 +44,20 @@ function SearchMedicine() {
       .catch((err) => { console.log("Error fetch:", err); setLoading(false); });
   }, []);
 
+  // ✅ Daftar kategori_obat unik dari data
+  const daftarKategori = [...new Set(
+    medicines.map((m) => m.kategoriObat).filter((k) => k && k !== "-")
+  )].sort();
+
   const handleSearch  = () => setSubmittedSearch(search.trim());
   const handleKeyDown = (e) => { if (e.key === "Enter") handleSearch(); };
 
-  const filteredMedicine = medicines.filter((item) =>
-    item.name.toLowerCase().includes(submittedSearch.toLowerCase())
-  );
+  // ✅ Filter by nama DAN kategori_obat
+  const filteredMedicine = medicines.filter((item) => {
+    const cocokNama     = item.name.toLowerCase().includes(submittedSearch.toLowerCase());
+    const cocokKategori = selectedKategori === "" || item.kategoriObat === selectedKategori;
+    return cocokNama && cocokKategori;
+  });
 
   const showToast = (msg) => {
     setToastMsg(msg);
@@ -57,6 +69,12 @@ function SearchMedicine() {
     const sudahSimpan = isSaved(item.id);
     toggleSave(item);
     showToast(sudahSimpan ? "Dihapus dari daftar simpan" : "✅ Berhasil disimpan!");
+  };
+
+  const handleReset = () => {
+    setSearch("");
+    setSubmittedSearch("");
+    setSelectedKategori("");
   };
 
   function ObatImg({ src, name, height = "100px" }) {
@@ -80,42 +98,84 @@ function SearchMedicine() {
       style={{ height, objectFit: "contain" }} onError={() => setErr(true)} />;
   }
 
+  const labelHasil = () => {
+    if (submittedSearch && selectedKategori)
+      return `Hasil "${submittedSearch}" · ${selectedKategori} (${filteredMedicine.length} obat)`;
+    if (submittedSearch)
+      return `Hasil pencarian "${submittedSearch}" (${filteredMedicine.length} obat)`;
+    if (selectedKategori)
+      return `${selectedKategori} (${filteredMedicine.length} obat)`;
+    return `Semua Obat (${medicines.length} obat)`;
+  };
+
   return (
     <div>
       <Navbar />
 
-      {/* Toast */}
       {toastMsg && <div className="save-toast">{toastMsg}</div>}
 
-      {/* ✅ container-fluid + px-4 agar full lebar layar */}
       <div className="search-page container-fluid px-4 mt-4">
         <h4 className="fw-bold">Pencarian Obat</h4>
 
-        {/* Search Bar */}
-        <div className="search-bar mt-3 d-flex justify-content-center gap-2">
+        {/* ════ Search + Filter ════ */}
+        <div className="search-filter-wrap mt-3">
           <input
-            type="text" placeholder="Masukan Nama Obat..."
-            value={search} onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={handleKeyDown} className="form-control search-input"
+            type="text"
+            placeholder="Cari nama obat..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            onKeyDown={handleKeyDown}
+            className="form-control search-input"
           />
-          <button className="btn btn-info text-white px-4" onClick={handleSearch}>Cari</button>
+
+          {/* ✅ Dropdown pakai kategori_obat */}
+          <select
+            className="form-select kategori-select"
+            value={selectedKategori}
+            onChange={(e) => setSelectedKategori(e.target.value)}
+          >
+            <option value="">Semua Jenis Obat</option>
+            {daftarKategori.map((kat) => (
+              <option key={kat} value={kat}>{kat}</option>
+            ))}
+          </select>
+
+          <button className="btn btn-cari text-white px-4" onClick={handleSearch}>
+            🔍 Cari
+          </button>
+
+          {(submittedSearch || selectedKategori) && (
+            <button className="btn btn-reset px-3" onClick={handleReset}>
+              ✕ Reset
+            </button>
+          )}
         </div>
 
-        <h5 className="mt-4 text-center">
-          {submittedSearch
-            ? `Hasil pencarian "${submittedSearch}" (${filteredMedicine.length} obat)`
-            : `Semua Obat (${medicines.length} obat)`}
-        </h5>
-
-        {loading && <p className="text-center text-muted mt-4">Memuat data obat...</p>}
-
-        {!loading && submittedSearch && filteredMedicine.length === 0 && (
-          <div className="text-center mt-5">
-            <p className="text-muted fs-5">😕 Obat "<strong>{submittedSearch}</strong>" tidak ditemukan.</p>
+        {/* Chip filter aktif */}
+        {selectedKategori && (
+          <div className="mt-2">
+            <span className="kategori-chip">
+              💊 {selectedKategori}
+              <button className="chip-close" onClick={() => setSelectedKategori("")}>✕</button>
+            </span>
           </div>
         )}
 
-        {/* ✅ Grid card — col-xl-2 agar 6 kolom di layar lebar */}
+        <h5 className="mt-3 result-label">{labelHasil()}</h5>
+
+        {loading && <p className="text-center text-muted mt-4">Memuat data obat...</p>}
+
+        {!loading && filteredMedicine.length === 0 && (submittedSearch || selectedKategori) && (
+          <div className="text-center mt-5">
+            <p className="text-muted fs-5">
+              😕 Obat tidak ditemukan.
+              <br />
+              <small>Coba ubah kata kunci atau pilih jenis obat lain.</small>
+            </p>
+          </div>
+        )}
+
+        {/* Grid Card */}
         <div className="row mt-3 g-3">
           {filteredMedicine.map((item) => (
             <div className="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-6" key={item.id}>
@@ -134,8 +194,25 @@ function SearchMedicine() {
                 </div>
                 <div className="card-body text-center d-flex flex-column p-2">
                   <h6 className="fw-bold medicine-name">{item.name}</h6>
-                  <small className="text-muted mb-2">{item.kategori}</small>
-                  <button className="btn btn-info mt-auto text-white btn-sm" onClick={() => setSelectedMedicine(item)}>
+
+                  {/* Kategori penyakit — info saja */}
+                  <small className="text-muted mb-1">{item.kategori}</small>
+
+                  {/* ✅ Kategori obat — klikable untuk filter */}
+                  {item.kategoriObat && item.kategoriObat !== "-" && (
+                    <span
+                      className="kategori-badge-card mb-2"
+                      onClick={() => setSelectedKategori(item.kategoriObat)}
+                      title={`Filter: ${item.kategoriObat}`}
+                    >
+                      💊 {item.kategoriObat}
+                    </span>
+                  )}
+
+                  <button
+                    className="btn btn-info mt-auto text-white btn-sm"
+                    onClick={() => setSelectedMedicine(item)}
+                  >
                     Detail
                   </button>
                 </div>
@@ -157,6 +234,7 @@ function SearchMedicine() {
             <div className="modal-detail-body text-start">
               {[
                 { label: "Nama Obat",        value: selectedMedicine.name           },
+                { label: "Jenis Obat",        value: selectedMedicine.kategoriObat   }, // ✅ tambah
                 { label: "Komposisi",         value: selectedMedicine.komposisi      },
                 { label: "Kategori Penyakit", value: selectedMedicine.kategori       },
                 { label: "Indikasi",          value: selectedMedicine.indikasi       },

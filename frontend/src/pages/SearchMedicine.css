@@ -5,15 +5,111 @@
 }
 
 /* ════════════════════════════════════
-   ✅ Search bar lebih lebar
+   Search + Filter bar
 ════════════════════════════════════ */
-.search-bar {
-  max-width: 700px;       /* ← diperbesar dari bawaan */
+.search-filter-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  max-width: 900px;
   margin: 0 auto;
 }
 
 .search-input {
-  max-width: 100% !important;   /* ← hapus batasan 350px dari inline style */
+  flex: 1;
+  min-width: 200px;
+  border-radius: 30px !important;
+  padding: 10px 20px !important;
+  border: 2px solid #ccc !important;
+  transition: 0.3s;
+}
+
+.search-input:focus {
+  border-color: #53c5c9 !important;
+  box-shadow: none !important;
+}
+
+/* Dropdown kategori_obat */
+.kategori-select {
+  width: 200px;
+  flex-shrink: 0;
+  border-radius: 30px !important;
+  padding: 10px 16px !important;
+  border: 2px solid #ccc !important;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: 0.3s;
+  background-color: white;
+}
+
+.kategori-select:focus {
+  border-color: #53c5c9 !important;
+  box-shadow: none !important;
+}
+
+/* Tombol Cari */
+.btn-cari {
+  border-radius: 12px !important;
+  font-weight: 600;
+  background-color: #53c5c9 !important;
+  border: none !important;
+  white-space: nowrap;
+  transition: 0.3s;
+  flex-shrink: 0;
+}
+
+.btn-cari:hover { background-color: #3fb2b6 !important; }
+
+/* Tombol Reset */
+.btn-reset {
+  border-radius: 12px !important;
+  font-weight: 600;
+  background-color: #f0f0f0 !important;
+  border: 1px solid #ccc !important;
+  color: #666 !important;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: 0.2s;
+}
+
+.btn-reset:hover {
+  background-color: #e0e0e0 !important;
+  color: #333 !important;
+}
+
+/* Chip filter aktif */
+.kategori-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: #e0f7f8;
+  border: 1px solid #53c5c9;
+  color: #1a7a7d;
+  font-size: 0.82rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 20px;
+}
+
+.chip-close {
+  background: none;
+  border: none;
+  color: #1a7a7d;
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.chip-close:hover { color: #cc0000; }
+
+/* Label hasil */
+.result-label {
+  font-size: 1rem;
+  color: #444;
+  font-weight: 500;
 }
 
 /* ════════════════════════════════════
@@ -41,6 +137,30 @@
   min-height: 2.4em;
 }
 
+/* Badge kategori_obat klikable di card */
+.kategori-badge-card {
+  display: inline-block;
+  font-size: 0.72rem;
+  color: #53c5c9;
+  font-weight: 600;
+  cursor: pointer;
+  border-radius: 20px;
+  padding: 2px 10px;
+  border: 1px solid #b2ebef;
+  background: #f0fafb;
+  transition: 0.2s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.kategori-badge-card:hover {
+  background: #53c5c9;
+  color: white;
+  border-color: #53c5c9;
+}
+
 /* ════════════════════════════════════
    Bookmark
 ════════════════════════════════════ */
@@ -60,10 +180,7 @@
   transition: opacity 0.2s, transform 0.2s, filter 0.2s;
 }
 
-.bookmark-btn:hover {
-  opacity: 0.65;
-  transform: scale(1.2);
-}
+.bookmark-btn:hover { opacity: 0.65; transform: scale(1.2); }
 
 .bookmark-btn.bookmark-active {
   opacity: 1;

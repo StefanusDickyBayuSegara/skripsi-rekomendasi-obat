@@ -5,6 +5,7 @@ class Obat(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     nama_obat = db.Column(db.String(255))
+    kategori_obat = db.Column(db.String(255))
     kategori_penyakit = db.Column(db.String(255))
     indikasi_clean = db.Column(db.Text)
     dosis_anak_clean = db.Column(db.Text)

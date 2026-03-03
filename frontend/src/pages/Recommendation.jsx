@@ -39,7 +39,7 @@ function ObatImage({ gambar, namaObat, height = "80px" }) {
 }
 
 // ════════════════════════════════════════════════════
-// Komponen Card Obat — reusable untuk Top5 & semua hasil
+// Komponen Card Obat
 // ════════════════════════════════════════════════════
 function ObatCard({ item, index, isSaved, onToggleSave, onDetail, isTop5 = false }) {
   return (
@@ -103,14 +103,17 @@ function Recommendation() {
     riwayat_penyakit: "",
   });
   const [profilTersimpan, setProfilTersimpan] = useState(false);
-  const [keluhan, setKeluhan]       = useState("");
-  const [loading, setLoading]       = useState(false);
-  const [sudahCari, setSudahCari]   = useState(false);
-  const [isDarurat, setIsDarurat]   = useState(false);
-  const [top5Obat, setTop5Obat]     = useState([]);
-  const [hasilObat, setHasilObat]   = useState([]);
+  const [keluhan, setKeluhan]           = useState("");
+  const [loading, setLoading]           = useState(false);
+  const [sudahCari, setSudahCari]       = useState(false);
+  const [isDarurat, setIsDarurat]       = useState(false);
+  const [top5Obat, setTop5Obat]         = useState([]);
+  const [hasilObat, setHasilObat]       = useState([]);
   const [selectedObat, setSelectedObat] = useState(null);
-  const [toastMsg, setToastMsg]     = useState("");
+  const [toastMsg, setToastMsg]         = useState("");
+
+  // ✅ State untuk show/hide Rekomendasi Lainnya
+  const [showLainnya, setShowLainnya]   = useState(false);
 
   const { isSaved, toggleSave } = useSavedList();
 
@@ -145,6 +148,7 @@ function Recommendation() {
     setIsDarurat(false);
     setTop5Obat([]);
     setHasilObat([]);
+    setShowLainnya(false); // ✅ Reset collapse setiap kali cari baru
 
     fetch("http://localhost:5000/api/rekomendasi", {
       method : "POST",
@@ -180,7 +184,6 @@ function Recommendation() {
 
       {toastMsg && <div className="save-toast">{toastMsg}</div>}
 
-      {/* ✅ container-fluid px-4 — sama seperti SearchMedicine */}
       <div className="container-fluid px-4 mt-4 pb-5">
         <h4 className="page-title mb-4">Cari Rekomendasi Obat Anda</h4>
 
@@ -279,12 +282,11 @@ function Recommendation() {
               <>
                 {/* ══ SEKSI TOP 5 ══ */}
                 {top5Obat.length > 0 && (
-                  <div className="mb-5">
+                  <div className="mb-4">
                     <div className="top5-header mb-3">
                       <span className="top5-title">🏆 Top 5 Rekomendasi Terbaik</span>
                       <span className="top5-subtitle">Diurutkan berdasarkan skor TF-IDF + Cosine Similarity tertinggi</span>
                     </div>
-                    {/* ✅ col-xl-2 agar 6 kolom di layar lebar, sama seperti SearchMedicine */}
                     <div className="row g-3">
                       {top5Obat.map((item, index) => (
                         <div className="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-6" key={item.id}>
@@ -299,24 +301,49 @@ function Recommendation() {
                   </div>
                 )}
 
-                {/* ══ SEKSI SEMUA HASIL (rank 6–20) ══ */}
+                {/* ══ SEKSI REKOMENDASI LAINNYA — collapse/expand ══ */}
                 {hasilLainnya.length > 0 && (
-                  <div>
-                    <h5 className="fw-bold mb-3" style={{ color: "#555" }}>
-                      📋 Rekomendasi Lainnya ({hasilLainnya.length} obat)
-                    </h5>
-                    {/* ✅ col-xl-2 konsisten */}
-                    <div className="row g-3">
-                      {hasilLainnya.map((item, index) => (
-                        <div className="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-6" key={item.id}>
-                          <ObatCard
-                            item={item} index={index + 5}
-                            isSaved={isSaved} onToggleSave={handleToggleSave}
-                            onDetail={setSelectedObat} isTop5={false}
-                          />
+                  <div className="lainnya-section">
+
+                    {/* ✅ Tombol toggle expand/collapse */}
+                    <button
+                      className="btn-lainnya-toggle"
+                      onClick={() => setShowLainnya(!showLainnya)}
+                    >
+                      <span className="lainnya-toggle-label">
+                        📋 Rekomendasi Lainnya ({hasilLainnya.length} obat)
+                      </span>
+                      <span className={`lainnya-arrow ${showLainnya ? "arrow-up" : ""}`}>
+                        ▼
+                      </span>
+                    </button>
+
+                    {/* ✅ Konten collapse — hanya tampil jika showLainnya true */}
+                    {showLainnya && (
+                      <div className="lainnya-content">
+                        <div className="row g-3">
+                          {hasilLainnya.map((item, index) => (
+                            <div className="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-6" key={item.id}>
+                              <ObatCard
+                                item={item} index={index + 5}
+                                isSaved={isSaved} onToggleSave={handleToggleSave}
+                                onDetail={setSelectedObat} isTop5={false}
+                              />
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
+
+                        {/* Tombol tutup di bawah */}
+                        <div className="text-center mt-4">
+                          <button
+                            className="btn-lainnya-tutup"
+                            onClick={() => setShowLainnya(false)}
+                          >
+                            ▲ Sembunyikan
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )}
               </>
