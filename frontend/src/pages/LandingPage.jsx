@@ -136,7 +136,7 @@ function LandingPage() {
               <div style={{ position:"relative", zIndex:1 }}>
                 <img src={pharmacy} alt="pharmacy" className="lp-hero-img" />
                 <div className="lp-float lp-float-top"><span className="lp-fi">✅</span><div><div className="lp-ft">Aman & Terpercaya</div><div className="lp-fs">Filter keamanan aktif</div></div></div>
-                <div className="lp-float lp-float-bot"><span className="lp-fi">🤖</span><div><div className="lp-ft">Content-Based AI</div><div className="lp-fs">Cosine Similarity</div></div></div>
+                <div className="lp-float lp-float-bot"><span className="lp-fi">🤖</span><div><div className="lp-ft">Content-Based </div><div className="lp-fs">Cosine Similarity</div></div></div>
               </div>
             </div>
           </div>
