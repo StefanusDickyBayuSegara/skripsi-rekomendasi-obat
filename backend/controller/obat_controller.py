@@ -14,7 +14,7 @@ def api_get_obat():
         result.append({
             "id"                  : obat.id,
             "nama_obat"           : obat.nama_obat,
-            "kategori_obat"       : obat.kategori_obat,        # ✅ DITAMBAHKAN
+            "kategori_obat"       : obat.kategori_obat,
             "kategori_penyakit"   : obat.kategori_penyakit,
             "indikasi_clean"      : obat.indikasi_clean,
             "dosis_anak_clean"    : obat.dosis_anak_clean,
@@ -27,6 +27,7 @@ def api_get_obat():
             "batasan_usia_min"    : obat.batasan_usia_min,
             "ket_hamil"           : obat.ket_hamil,
             "gambar"              : obat.gambar,
+            "kategori_bpom"       : obat.kategori_bpom,      # ✅ DITAMBAHKAN
         })
     return jsonify(result), 200
 

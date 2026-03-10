@@ -19,15 +19,11 @@ function SavedList() {
   };
 
   const filtered = savedList.filter((item) =>
-    (item.nama_obat || item.name || "")
-      .toLowerCase()
-      .includes(search.toLowerCase())
+    (item.nama_obat || item.name || "").toLowerCase().includes(search.toLowerCase())
   );
 
   const get = (item, ...keys) => {
-    for (const k of keys) {
-      if (item[k] && item[k] !== "-") return item[k];
-    }
+    for (const k of keys) { if (item[k] && item[k] !== "-") return item[k]; }
     return "-";
   };
 
@@ -47,11 +43,33 @@ function SavedList() {
     return null;
   };
 
+  // ✅ Komponen gambar seragam dengan SearchMedicine
+  function SavedImg({ src, name }) {
+    const [err, setErr] = useState(false);
+    const inisial = (name || "?").split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+
+    if (!src || err) {
+      return (
+        <div className="saved-placeholder">
+          <span className="placeholder-inisial">{inisial}</span>
+          <span className="placeholder-nama">{name?.split(" ")[0]}</span>
+        </div>
+      );
+    }
+    return (
+      <img
+        src={src}
+        alt={name}
+        style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "center", padding: "8px" }}
+        onError={() => setErr(true)}
+      />
+    );
+  }
+
   return (
     <div className="savedlist-page">
       <Navbar />
 
-      {/* ✅ container-fluid px-4 — sama seperti SearchMedicine & Recommendation */}
       <div className="container-fluid px-4 mt-4 pb-5">
         <h4 className="savedlist-title">Daftar Simpan</h4>
 
@@ -70,7 +88,6 @@ function SavedList() {
           )}
         </div>
 
-        {/* Deskripsi */}
         {savedList.length > 0 && (
           <p className="savedlist-desc">
             "Ini adalah obat-obatan yang telah Anda simpan. Anda dapat melihat
@@ -78,7 +95,6 @@ function SavedList() {
           </p>
         )}
 
-        {/* Empty state */}
         {savedList.length === 0 && (
           <div className="savedlist-empty">
             <div className="empty-icon">🔖</div>
@@ -91,7 +107,6 @@ function SavedList() {
           </div>
         )}
 
-        {/* No result from search */}
         {savedList.length > 0 && filtered.length === 0 && (
           <div className="text-center mt-4">
             <p className="text-muted">
@@ -100,13 +115,11 @@ function SavedList() {
           </div>
         )}
 
-        {/* ✅ Grid — col-xl-2 agar 6 kolom di layar lebar, konsisten */}
+        {/* Grid */}
         <div className="row g-3 mt-1">
           {filtered.map((item) => {
             const namaObat  = getNamaObat(item);
             const gambarSrc = getGambar(item);
-            const inisial   = namaObat
-              .split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
             return (
               <div className="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-6" key={item.id}>
@@ -114,25 +127,11 @@ function SavedList() {
 
                   <div className="bookmark-icon saved">🔖</div>
 
-                  {/* Gambar */}
+                  {/* ✅ wrapper fixed height seragam */}
                   <div className="saved-image-wrap">
-                    {gambarSrc ? (
-                      <img
-                        src={gambarSrc}
-                        alt={namaObat}
-                        className="img-fluid"
-                        style={{ height: "100px", objectFit: "contain" }}
-                        onError={(e) => { e.target.style.display = "none"; }}
-                      />
-                    ) : (
-                      <div className="saved-placeholder">
-                        <span className="placeholder-inisial">{inisial}</span>
-                        <span className="placeholder-nama">{namaObat.split(" ")[0]}</span>
-                      </div>
-                    )}
+                    <SavedImg src={gambarSrc} name={namaObat} />
                   </div>
 
-                  {/* Info */}
                   <div className="card-body p-2 d-flex flex-column text-center">
                     <p className="saved-name mb-1">{namaObat}</p>
                     <small className="saved-kategori fw-bold mb-2">{getKategori(item)}</small>
@@ -162,21 +161,9 @@ function SavedList() {
             </div>
             <div className="modal-body-custom">
               <div className="text-center mb-3">
+                {/* ✅ modal image wrap fixed size */}
                 <div className="modal-image-wrap mx-auto">
-                  {getGambar(selectedObat) ? (
-                    <img
-                      src={getGambar(selectedObat)}
-                      alt={getNamaObat(selectedObat)}
-                      style={{ height: "120px", objectFit: "contain" }}
-                    />
-                  ) : (
-                    <div className="modal-placeholder">
-                      <span>
-                        {getNamaObat(selectedObat)
-                          .split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase()}
-                      </span>
-                    </div>
-                  )}
+                  <SavedImg src={getGambar(selectedObat)} name={getNamaObat(selectedObat)} />
                 </div>
                 <p className="text-muted small mt-2">Informasi Produk</p>
               </div>

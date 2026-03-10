@@ -3,10 +3,53 @@ import Navbar from "../components/Navbar";
 import { useSavedList } from "../hooks/Usesavedlist";
 import "./SearchMedicine.css";
 
+// ✅ Key disesuaikan dengan isi kolom kategori_bpom di database (Hijau/Biru/Merah)
+const BPOM_CONFIG = {
+  "hijau" : { color: "#28a745", label: "Obat Bebas"          },
+  "biru"  : { color: "#007bff", label: "Obat Bebas Terbatas" },
+  "merah" : { color: "#dc3545", label: "Obat Keras"          },
+  // fallback jika nama lengkap
+  "obat bebas"         : { color: "#28a745", label: "Obat Bebas"          },
+  "obat bebas terbatas": { color: "#007bff", label: "Obat Bebas Terbatas" },
+  "obat keras"         : { color: "#dc3545", label: "Obat Keras"          },
+  "narkotika"          : { color: "#343a40", label: "Narkotika"           },
+  "psikotropika"       : { color: "#6f42c1", label: "Psikotropika"        },
+};
+
+function BpomBadge({ kategori }) {
+  if (!kategori || kategori === "-" || kategori === "null") return null;
+
+  // Cari config dengan lowercase agar tidak sensitif huruf besar/kecil
+  const key = kategori.trim().toLowerCase();
+  const cfg = BPOM_CONFIG[key] || { color: "#6c757d", label: kategori };
+
+  const dotStyle = {
+    backgroundColor : cfg.color,
+    width           : "12px",
+    height          : "12px",
+    minWidth        : "12px",
+    minHeight       : "12px",
+    borderRadius    : "50%",
+    display         : "inline-block",
+    flexShrink      : 0,
+  };
+
+  return (
+    <span
+      className="bpom-badge"
+      style={{ borderColor: cfg.color, color: cfg.color }}
+      title={`Status BPOM: ${cfg.label}`}
+    >
+      <span style={dotStyle} />
+      <span className="bpom-label">{cfg.label}</span>
+    </span>
+  );
+}
+
 function SearchMedicine() {
   const [search, setSearch]                     = useState("");
   const [submittedSearch, setSubmittedSearch]   = useState("");
-  const [selectedKategori, setSelectedKategori] = useState(""); // filter kategori_obat
+  const [selectedKategori, setSelectedKategori] = useState("");
   const [selectedMedicine, setSelectedMedicine] = useState(null);
   const [medicines, setMedicines]               = useState([]);
   const [loading, setLoading]                   = useState(true);
@@ -21,10 +64,9 @@ function SearchMedicine() {
         const formattedData = data.map((item) => ({
           id            : item.id,
           name          : item.nama_obat           ?? "Tanpa Nama",
-          // ✅ kategori_obat untuk filter jenis obat (tablet, sirup, dll)
           kategoriObat  : item.kategori_obat       ?? "-",
-          // kategori_penyakit tetap untuk info penyakit di card & modal
           kategori      : item.kategori_penyakit   ?? "-",
+          kategoriBpom  : item.kategori_bpom       ?? "-",
           indikasi      : item.indikasi_clean       ?? "-",
           dosisAnak     : item.dosis_anak_clean     ?? "-",
           dosis_dewasa  : item.dosis_dewasa_clean   ?? "-",
@@ -38,13 +80,15 @@ function SearchMedicine() {
             ? `http://localhost:5000/static/images/${item.gambar}`
             : null,
         }));
+        // 🔍 DEBUG: cek nilai kategori_bpom dari API (hapus setelah fix)
+        const sample = formattedData.slice(0, 5).map(d => ({ nama: d.name, bpom: d.kategoriBpom }));
+        console.log("🔍 Sample kategori_bpom:", sample);
         setMedicines(formattedData);
         setLoading(false);
       })
       .catch((err) => { console.log("Error fetch:", err); setLoading(false); });
   }, []);
 
-  // ✅ Daftar kategori_obat unik dari data
   const daftarKategori = [...new Set(
     medicines.map((m) => m.kategoriObat).filter((k) => k && k !== "-")
   )].sort();
@@ -52,7 +96,6 @@ function SearchMedicine() {
   const handleSearch  = () => setSubmittedSearch(search.trim());
   const handleKeyDown = (e) => { if (e.key === "Enter") handleSearch(); };
 
-  // ✅ Filter by nama DAN kategori_obat
   const filteredMedicine = medicines.filter((item) => {
     const cocokNama     = item.name.toLowerCase().includes(submittedSearch.toLowerCase());
     const cocokKategori = selectedKategori === "" || item.kategoriObat === selectedKategori;
@@ -77,25 +120,39 @@ function SearchMedicine() {
     setSelectedKategori("");
   };
 
-  function ObatImg({ src, name, height = "100px" }) {
+  // ✅ Gambar mengisi wrapper sepenuhnya, ukuran seragam semua card
+  function ObatImg({ src, name }) {
     const [err, setErr] = useState(false);
     const inisial = (name || "?").split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
-    const px = parseInt(height);
+
     if (!src || err) {
       return (
         <div style={{
-          width: height, height, margin: "0 auto",
+          width: "100%", height: "100%",
           background: "linear-gradient(135deg, #53c5c9, #3fb2b6)",
-          borderRadius: "12px", display: "flex", flexDirection: "column",
-          alignItems: "center", justifyContent: "center", color: "white", gap: "2px",
+          display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          color: "white", gap: "4px",
         }}>
-          <span style={{ fontSize: px * 0.35 + "px", fontWeight: 700 }}>{inisial}</span>
-          <span style={{ fontSize: px * 0.13 + "px", opacity: 0.85 }}>{name?.split(" ")[0]}</span>
+          <span style={{ fontSize: "2rem", fontWeight: 700 }}>{inisial}</span>
+          <span style={{ fontSize: "0.65rem", opacity: 0.9 }}>{name?.split(" ")[0]}</span>
         </div>
       );
     }
-    return <img src={src} alt={name} className="img-fluid"
-      style={{ height, objectFit: "contain" }} onError={() => setErr(true)} />;
+    return (
+      <img
+        src={src}
+        alt={name}
+        style={{
+          width      : "100%",
+          height     : "100%",
+          objectFit  : "contain",
+          objectPosition: "center",
+          padding    : "4px",
+        }}
+        onError={() => setErr(true)}
+      />
+    );
   }
 
   const labelHasil = () => {
@@ -117,7 +174,7 @@ function SearchMedicine() {
       <div className="search-page container-fluid px-4 mt-4">
         <h4 className="fw-bold">Pencarian Obat</h4>
 
-        {/* ════ Search + Filter ════ */}
+        {/* Search + Filter */}
         <div className="search-filter-wrap mt-3">
           <input
             type="text"
@@ -128,7 +185,6 @@ function SearchMedicine() {
             className="form-control search-input"
           />
 
-          {/* ✅ Dropdown pakai kategori_obat */}
           <select
             className="form-select kategori-select"
             value={selectedKategori}
@@ -151,7 +207,6 @@ function SearchMedicine() {
           )}
         </div>
 
-        {/* Chip filter aktif */}
         {selectedKategori && (
           <div className="mt-2">
             <span className="kategori-chip">
@@ -181,6 +236,7 @@ function SearchMedicine() {
             <div className="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-6" key={item.id}>
               <div className="card medicine-card h-100 shadow-sm">
 
+                {/* ✅ Fix 2: bookmark diperbesar */}
                 <button
                   className={`bookmark-btn ${isSaved(item.id) ? "bookmark-active" : ""}`}
                   onClick={(e) => handleToggleSave(e, item)}
@@ -189,25 +245,30 @@ function SearchMedicine() {
                   🔖
                 </button>
 
-                <div className="text-center p-3">
-                  <ObatImg src={item.image} name={item.name} height="100px" />
+                {/* ✅ Gambar mengisi wrapper sepenuhnya */}
+                <div className="card-img-wrap">
+                  <ObatImg src={item.image} name={item.name} />
                 </div>
+
                 <div className="card-body text-center d-flex flex-column p-2">
                   <h6 className="fw-bold medicine-name">{item.name}</h6>
 
-                  {/* Kategori penyakit — info saja */}
                   <small className="text-muted mb-1">{item.kategori}</small>
 
-                  {/* ✅ Kategori obat — klikable untuk filter */}
                   {item.kategoriObat && item.kategoriObat !== "-" && (
                     <span
-                      className="kategori-badge-card mb-2"
+                      className="kategori-badge-card mb-1"
                       onClick={() => setSelectedKategori(item.kategoriObat)}
                       title={`Filter: ${item.kategoriObat}`}
                     >
                       💊 {item.kategoriObat}
                     </span>
                   )}
+
+                  {/* ✅ Fix 3: Badge BPOM */}
+                  <div className="mb-2">
+                    <BpomBadge kategori={item.kategoriBpom} />
+                  </div>
 
                   <button
                     className="btn btn-info mt-auto text-white btn-sm"
@@ -228,13 +289,20 @@ function SearchMedicine() {
           <div className="modal-content shadow" onClick={(e) => e.stopPropagation()}>
             <h5 className="modal-title">Detail Obat</h5>
             <div className="modal-image">
-              <ObatImg src={selectedMedicine.image} name={selectedMedicine.name} height="120px" />
-              <p className="text-muted small mt-2">Informasi Produk</p>
+              <div style={{ height: "150px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <ObatImg src={selectedMedicine.image} name={selectedMedicine.name} />
+              </div>
+              {/* ✅ Badge BPOM di modal */}
+              <div className="mt-2">
+                <BpomBadge kategori={selectedMedicine.kategoriBpom} />
+              </div>
+              <p className="text-muted small mt-1">Informasi Produk</p>
             </div>
             <div className="modal-detail-body text-start">
               {[
                 { label: "Nama Obat",        value: selectedMedicine.name           },
-                { label: "Jenis Obat",        value: selectedMedicine.kategoriObat   }, // ✅ tambah
+                { label: "Jenis Obat",        value: selectedMedicine.kategoriObat   },
+                { label: "Status BPOM",       value: selectedMedicine.kategoriBpom   }, // ✅ tambah
                 { label: "Komposisi",         value: selectedMedicine.komposisi      },
                 { label: "Kategori Penyakit", value: selectedMedicine.kategori       },
                 { label: "Indikasi",          value: selectedMedicine.indikasi       },

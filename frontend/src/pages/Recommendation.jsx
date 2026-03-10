@@ -4,46 +4,84 @@ import { useSavedList } from "../hooks/Usesavedlist";
 import "./Recommendation.css";
 
 // ════════════════════════════════════════════════════
-// Komponen gambar dengan placeholder
+// Komponen gambar — seragam dengan SearchMedicine
 // ════════════════════════════════════════════════════
-function ObatImage({ gambar, namaObat, height = "80px" }) {
+function ObatImage({ gambar, namaObat }) {
   const [imgError, setImgError] = useState(false);
   const inisial = (namaObat || "?").split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
-  const px = parseInt(height);
 
-  if (!gambar || imgError) {
+  // ✅ Cek berbagai kemungkinan nilai gambar
+  const gambarValid = gambar && gambar !== "null" && gambar !== "undefined" && gambar !== "-";
+
+  if (!gambarValid || imgError) {
     return (
       <div style={{
-        width: height, height, margin: "0 auto",
+        width: "100%", height: "100%",
         background: "linear-gradient(135deg, #53c5c9, #3fb2b6)",
-        borderRadius: "12px", display: "flex", flexDirection: "column",
-        alignItems: "center", justifyContent: "center", color: "white", gap: "2px",
+        display: "flex", flexDirection: "column",
+        alignItems: "center", justifyContent: "center",
+        color: "white", gap: "4px",
       }}>
-        <span style={{ fontSize: px * 0.35 + "px", fontWeight: 700 }}>{inisial}</span>
-        <span style={{ fontSize: px * 0.13 + "px", opacity: 0.85, textAlign: "center", padding: "0 4px" }}>
-          {namaObat?.split(" ")[0]}
-        </span>
+        <span style={{ fontSize: "1.8rem", fontWeight: 700 }}>{inisial}</span>
+        <span style={{ fontSize: "0.62rem", opacity: 0.9 }}>{namaObat?.split(" ")[0]}</span>
       </div>
     );
   }
 
+  // ✅ Jika sudah URL lengkap pakai langsung, jika tidak tambah base URL
+  const imgSrc = gambar.startsWith("http")
+    ? gambar
+    : `http://localhost:5000/static/images/${gambar}`;
+
   return (
     <img
-      src={`http://localhost:5000/static/images/${gambar}`}
+      src={imgSrc}
       alt={namaObat}
-      style={{ height, objectFit: "contain" }}
+      style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "center", padding: "4px" }}
       onError={() => setImgError(true)}
-      className="img-fluid"
     />
   );
 }
 
 // ════════════════════════════════════════════════════
-// Komponen Card Obat
+// Badge BPOM — sama persis dengan SearchMedicine
+// ════════════════════════════════════════════════════
+const BPOM_CONFIG = {
+  "hijau"              : { color: "#28a745", label: "Obat Bebas"          },
+  "biru"               : { color: "#007bff", label: "Obat Bebas Terbatas" },
+  "merah"              : { color: "#dc3545", label: "Obat Keras"          },
+  "obat bebas"         : { color: "#28a745", label: "Obat Bebas"          },
+  "obat bebas terbatas": { color: "#007bff", label: "Obat Bebas Terbatas" },
+  "obat keras"         : { color: "#dc3545", label: "Obat Keras"          },
+  "narkotika"          : { color: "#343a40", label: "Narkotika"           },
+  "psikotropika"       : { color: "#6f42c1", label: "Psikotropika"        },
+};
+
+function BpomBadge({ kategori }) {
+  if (!kategori || kategori === "-" || kategori === "null") return null;
+  const cfg = BPOM_CONFIG[kategori.trim().toLowerCase()] || { color: "#6c757d", label: kategori };
+  const dotStyle = {
+    backgroundColor: cfg.color,
+    width: "10px", height: "10px",
+    minWidth: "10px", minHeight: "10px",
+    borderRadius: "50%", display: "inline-block", flexShrink: 0,
+  };
+  return (
+    <span className="bpom-badge" style={{ borderColor: cfg.color, color: cfg.color }}>
+      <span style={dotStyle} />
+      <span className="bpom-label">{cfg.label}</span>
+    </span>
+  );
+}
+
+// ════════════════════════════════════════════════════
+// Komponen Card Obat — tampilan mirip SearchMedicine
 // ════════════════════════════════════════════════════
 function ObatCard({ item, index, isSaved, onToggleSave, onDetail, isTop5 = false }) {
   return (
-    <div className={`card medicine-card h-100 text-center shadow-sm ${isTop5 ? "top5-card" : ""}`}>
+    <div className={`card medicine-card h-100 shadow-sm ${isTop5 ? "top5-card" : ""}`}>
+
+      {/* ── Badge rank / crown ── */}
       {isTop5 && (
         <div className="top5-crown">
           {index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : `#${index + 1}`}
@@ -51,6 +89,7 @@ function ObatCard({ item, index, isSaved, onToggleSave, onDetail, isTop5 = false
       )}
       {!isTop5 && <div className="rank-badge">#{index + 1}</div>}
 
+      {/* ── Bookmark ── */}
       <button
         className={`bookmark-btn ${isSaved(item.id) ? "bookmark-active" : ""}`}
         onClick={(e) => onToggleSave(e, item)}
@@ -59,17 +98,33 @@ function ObatCard({ item, index, isSaved, onToggleSave, onDetail, isTop5 = false
         🔖
       </button>
 
-      <div className="medicine-image-wrap p-2">
-        <ObatImage gambar={item.gambar} namaObat={item.nama_obat} height={isTop5 ? "100px" : "80px"} />
+      {/* ── Gambar — sama dengan SearchMedicine ── */}
+      <div className="medicine-image-wrap">
+        <ObatImage gambar={item.gambar} namaObat={item.nama_obat} />
       </div>
 
-      <div className="card-body p-2 d-flex flex-column">
-        <p className="medicine-name mb-1">{item.nama_obat}</p>
+      {/* ── Body card ── */}
+      <div className="card-body text-center d-flex flex-column p-2">
+        <h6 className="medicine-name mb-1">{item.nama_obat}</h6>
+
         <small className="text-muted mb-1">{item.kategori_penyakit || "-"}</small>
 
+        {/* Badge kategori obat — sama dengan SearchMedicine */}
+        {item.kategori_obat && item.kategori_obat !== "-" && (
+          <span className="kategori-badge-card mb-1">
+            💊 {item.kategori_obat}
+          </span>
+        )}
+
+        {/* Badge BPOM — sama dengan SearchMedicine */}
+        <div className="mb-1">
+          <BpomBadge kategori={item.kategori_bpom} />
+        </div>
+
+        {/* Peringatan hamil — tetap ada, khusus rekomendasi */}
         {item.peringatan_hamil && (
           <div style={{
-            fontSize: "0.65rem", color: "#b45309", background: "#fffbeb",
+            fontSize: "0.63rem", color: "#b45309", background: "#fffbeb",
             border: "1px solid #fcd34d", borderRadius: "6px",
             padding: "3px 5px", marginBottom: "4px", textAlign: "left", lineHeight: "1.3",
           }}>
@@ -77,9 +132,11 @@ function ObatCard({ item, index, isSaved, onToggleSave, onDetail, isTop5 = false
           </div>
         )}
 
+        {/* Skor relevansi — khusus rekomendasi */}
         <div className={`skor-badge mb-2 ${isTop5 ? "skor-badge-top5" : ""}`}>
           Skor: {(item.skor * 100).toFixed(1)}%
         </div>
+
         <button
           className="btn btn-info btn-sm text-white mt-auto detail-btn"
           onClick={() => onDetail(item)}
@@ -111,8 +168,6 @@ function Recommendation() {
   const [hasilObat, setHasilObat]       = useState([]);
   const [selectedObat, setSelectedObat] = useState(null);
   const [toastMsg, setToastMsg]         = useState("");
-
-  // ✅ State untuk show/hide Rekomendasi Lainnya
   const [showLainnya, setShowLainnya]   = useState(false);
 
   const { isSaved, toggleSave } = useSavedList();
@@ -148,7 +203,7 @@ function Recommendation() {
     setIsDarurat(false);
     setTop5Obat([]);
     setHasilObat([]);
-    setShowLainnya(false); // ✅ Reset collapse setiap kali cari baru
+    setShowLainnya(false);
 
     fetch("http://localhost:5000/api/rekomendasi", {
       method : "POST",
@@ -243,7 +298,6 @@ function Recommendation() {
           </button>
         </div>
 
-        {/* Loading */}
         {loading && (
           <div className="text-center mt-4">
             <div className="spinner-border text-info" role="status" />
@@ -251,7 +305,6 @@ function Recommendation() {
           </div>
         )}
 
-        {/* Alert Darurat */}
         {!loading && isDarurat && (
           <div className="alert-darurat">
             <div className="darurat-icon">🚨</div>
@@ -270,7 +323,6 @@ function Recommendation() {
           </div>
         )}
 
-        {/* ════ HASIL ════ */}
         {!loading && !isDarurat && sudahCari && (
           <>
             {hasilObat.length === 0 ? (
@@ -280,7 +332,6 @@ function Recommendation() {
               </div>
             ) : (
               <>
-                {/* ══ SEKSI TOP 5 ══ */}
                 {top5Obat.length > 0 && (
                   <div className="mb-4">
                     <div className="top5-header mb-3">
@@ -301,24 +352,15 @@ function Recommendation() {
                   </div>
                 )}
 
-                {/* ══ SEKSI REKOMENDASI LAINNYA — collapse/expand ══ */}
                 {hasilLainnya.length > 0 && (
                   <div className="lainnya-section">
-
-                    {/* ✅ Tombol toggle expand/collapse */}
-                    <button
-                      className="btn-lainnya-toggle"
-                      onClick={() => setShowLainnya(!showLainnya)}
-                    >
+                    <button className="btn-lainnya-toggle" onClick={() => setShowLainnya(!showLainnya)}>
                       <span className="lainnya-toggle-label">
                         📋 Rekomendasi Lainnya ({hasilLainnya.length} obat)
                       </span>
-                      <span className={`lainnya-arrow ${showLainnya ? "arrow-up" : ""}`}>
-                        ▼
-                      </span>
+                      <span className={`lainnya-arrow ${showLainnya ? "arrow-up" : ""}`}>▼</span>
                     </button>
 
-                    {/* ✅ Konten collapse — hanya tampil jika showLainnya true */}
                     {showLainnya && (
                       <div className="lainnya-content">
                         <div className="row g-3">
@@ -332,13 +374,8 @@ function Recommendation() {
                             </div>
                           ))}
                         </div>
-
-                        {/* Tombol tutup di bawah */}
                         <div className="text-center mt-4">
-                          <button
-                            className="btn-lainnya-tutup"
-                            onClick={() => setShowLainnya(false)}
-                          >
+                          <button className="btn-lainnya-tutup" onClick={() => setShowLainnya(false)}>
                             ▲ Sembunyikan
                           </button>
                         </div>
@@ -428,10 +465,15 @@ function Recommendation() {
             </div>
             <div className="modal-body-custom">
               <div className="text-center mb-3">
-                <div className="modal-image-wrap mx-auto">
-                  <ObatImage gambar={selectedObat.gambar} namaObat={selectedObat.nama_obat} height="120px" />
+                {/* ✅ wrapper fixed height untuk modal */}
+                <div className="modal-image-wrap mx-auto" style={{ width: "160px", height: "160px" }}>
+                  <ObatImage gambar={selectedObat.gambar} namaObat={selectedObat.nama_obat} />
                 </div>
-                <p className="text-muted small mt-2">Informasi Produk</p>
+                {/* ✅ Badge BPOM di modal — sama dgn SearchMedicine */}
+                <div className="mt-2">
+                  <BpomBadge kategori={selectedObat.kategori_bpom} />
+                </div>
+                <p className="text-muted small mt-1">Informasi Produk</p>
               </div>
               <div className="text-center mb-3">
                 <span className="badge bg-info text-white px-3 py-2" style={{ fontSize: "0.85rem" }}>
@@ -454,6 +496,8 @@ function Recommendation() {
               <div className="modal-detail-body text-start">
                 {[
                   { label: "Nama Obat",        value: selectedObat.nama_obat            },
+                  { label: "Jenis Obat",        value: selectedObat.kategori_obat        },
+                  { label: "Status BPOM",       value: selectedObat.kategori_bpom        },
                   { label: "Komposisi",         value: selectedObat.komposisi_clean      },
                   { label: "Kategori Penyakit", value: selectedObat.kategori_penyakit    },
                   { label: "Indikasi",          value: selectedObat.indikasi_clean       },

@@ -14,11 +14,11 @@
 }
 
 /* ════════════════════════════════════
-   SEARCH BAR — diperlebar seperti SearchMedicine
+   SEARCH BAR
 ════════════════════════════════════ */
 .savedlist-search-wrap {
   position: relative;
-  max-width: 700px;        /* ✅ diperbesar dari 340px */
+  max-width: 700px;
   display: flex;
   align-items: center;
   border: 2px solid #ccc;
@@ -28,11 +28,7 @@
   gap: 8px;
 }
 
-.search-icon {
-  font-size: 0.95rem;
-  color: #888;
-  flex-shrink: 0;
-}
+.search-icon { font-size: 0.95rem; color: #888; flex-shrink: 0; }
 
 .savedlist-search {
   border: none;
@@ -65,15 +61,8 @@
 /* ════════════════════════════════════
    EMPTY STATE
 ════════════════════════════════════ */
-.savedlist-empty {
-  text-align: center;
-  padding: 60px 20px;
-}
-
-.empty-icon {
-  font-size: 3.5rem;
-  margin-bottom: 12px;
-}
+.savedlist-empty { text-align: center; padding: 60px 20px; }
+.empty-icon { font-size: 3.5rem; margin-bottom: 12px; }
 
 /* ════════════════════════════════════
    SAVED CARD
@@ -105,40 +94,49 @@
   filter: drop-shadow(0 1px 2px rgba(83, 197, 201, 0.5));
 }
 
-/* ── Gambar ── */
+/* ── Gambar — ✅ fixed height seragam dengan SearchMedicine ── */
 .saved-image-wrap {
+  height: 160px;
   background-color: #f5f5f5;
   border-radius: 12px 12px 0 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 120px;
-  padding: 12px;
+  overflow: hidden;
+  border-bottom: 1px solid #ebebeb;
+}
+
+/* ✅ Gambar mengisi penuh wrapper */
+.saved-image-wrap img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: contain !important;
+  object-position: center !important;
+  padding: 8px;
 }
 
 /* ── Placeholder ── */
 .saved-placeholder {
-  width: 90px;
-  height: 90px;
+  width: 100%;
+  height: 100%;
   background: linear-gradient(135deg, #53c5c9, #3fb2b6);
-  border-radius: 14px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   color: white;
-  gap: 2px;
+  gap: 4px;
 }
 
 .placeholder-inisial {
-  font-size: 1.6rem;
+  font-size: 2rem;
   font-weight: 700;
   line-height: 1;
 }
 
 .placeholder-nama {
-  font-size: 0.6rem;
-  opacity: 0.85;
+  font-size: 0.62rem;
+  opacity: 0.9;
   text-align: center;
   padding: 0 4px;
 }
@@ -156,11 +154,7 @@
   min-height: 2.4em;
 }
 
-.saved-kategori {
-  font-size: 0.75rem;
-  color: #53c5c9;
-  display: block;
-}
+.saved-kategori { font-size: 0.75rem; color: #53c5c9; display: block; }
 
 /* ════════════════════════════════════
    BUTTONS
@@ -242,24 +236,36 @@
   flex-shrink: 0;
 }
 
+/* ✅ Modal image wrap fixed size */
 .modal-image-wrap {
   background: #f0f0f0;
-  padding: 16px;
+  padding: 12px;
   border-radius: 16px;
-  display: inline-block;
+  width: 160px;
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.modal-image-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  object-position: center;
 }
 
 .modal-placeholder {
-  width: 100px; height: 100px;
+  width: 100%; height: 100%;
   background: linear-gradient(135deg, #53c5c9, #3fb2b6);
-  border-radius: 14px;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-size: 2rem;
   font-weight: 700;
-  margin: 0 auto;
 }
 
 .modal-detail-body { width: 100%; }

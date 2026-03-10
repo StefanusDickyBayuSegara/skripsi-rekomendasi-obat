@@ -18,3 +18,4 @@ class Obat(db.Model):
     batasan_usia_min = db.Column(db.String(50))
     ket_hamil = db.Column(db.String(100))
     gambar = db.Column(db.String(255))
+    kategori_bpom = db.Column(db.String(100))   # ✅ DITAMBAHKAN

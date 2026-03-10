@@ -54,12 +54,16 @@ def api_get_rekomendasi():
 
         skor             = hitung_skor_relevansi(keluhan_tokens, indikasi_tokens, cosine)
         peringatan_hamil = get_peringatan_hamil(obat, jenis_kelamin, status_hamil)
-        gambar_final     = get_gambar_fallback(obat.nama_obat, obat.gambar)
+
+        # ✅ Prioritaskan obat.gambar dari DB langsung
+        gambar_final = obat.gambar or get_gambar_fallback(obat.nama_obat, obat.gambar)
 
         kandidat.append({
             "id"                  : obat.id,
             "nama_obat"           : obat.nama_obat,
+            "kategori_obat"       : obat.kategori_obat,       # ✅ untuk badge 💊
             "kategori_penyakit"   : obat.kategori_penyakit,
+            "kategori_bpom"       : obat.kategori_bpom,       # ✅ untuk badge BPOM
             "indikasi_clean"      : obat.indikasi_clean,
             "dosis_anak_clean"    : obat.dosis_anak_clean,
             "dosis_dewasa_clean"  : obat.dosis_dewasa_clean,

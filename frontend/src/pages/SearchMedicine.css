@@ -30,7 +30,6 @@
   box-shadow: none !important;
 }
 
-/* Dropdown kategori_obat */
 .kategori-select {
   width: 200px;
   flex-shrink: 0;
@@ -48,7 +47,6 @@
   box-shadow: none !important;
 }
 
-/* Tombol Cari */
 .btn-cari {
   border-radius: 12px !important;
   font-weight: 600;
@@ -61,7 +59,6 @@
 
 .btn-cari:hover { background-color: #3fb2b6 !important; }
 
-/* Tombol Reset */
 .btn-reset {
   border-radius: 12px !important;
   font-weight: 600;
@@ -78,7 +75,6 @@
   color: #333 !important;
 }
 
-/* Chip filter aktif */
 .kategori-chip {
   display: inline-flex;
   align-items: center;
@@ -105,7 +101,6 @@
 
 .chip-close:hover { color: #cc0000; }
 
-/* Label hasil */
 .result-label {
   font-size: 1rem;
   color: #444;
@@ -127,6 +122,19 @@
   box-shadow: 0 8px 24px rgba(83, 197, 201, 0.18) !important;
 }
 
+/* ✅ Fix 1: wrapper gambar fixed height lebih besar & seragam */
+.card-img-wrap {
+  height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 10px;
+  background: #ffffff;
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+  border-bottom: 1px solid #f0f0f0;
+}
+
 .medicine-name {
   font-size: 0.82rem;
   line-height: 1.35;
@@ -137,7 +145,6 @@
   min-height: 2.4em;
 }
 
-/* Badge kategori_obat klikable di card */
 .kategori-badge-card {
   display: inline-block;
   font-size: 0.72rem;
@@ -162,29 +169,68 @@
 }
 
 /* ════════════════════════════════════
-   Bookmark
+   ✅ Fix 3: Badge Status BPOM dengan lingkaran berwarna
+════════════════════════════════════ */
+.bpom-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 10px 3px 6px;
+  border-radius: 20px;
+  border: 1.5px solid;
+  background: white;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Lingkaran berwarna solid — pakai background dari inline style */
+.bpom-dot {
+  width: 12px !important;
+  height: 12px !important;
+  min-width: 12px !important;
+  min-height: 12px !important;
+  border-radius: 50% !important;
+  flex-shrink: 0 !important;
+  display: inline-block !important;
+  vertical-align: middle;
+}
+
+.bpom-label { overflow: hidden; text-overflow: ellipsis; }
+
+/* ════════════════════════════════════
+   ✅ Fix 2: Bookmark diperbesar
 ════════════════════════════════════ */
 .bookmark-btn {
   position: absolute;
-  top: 8px;
-  right: 10px;
-  background: none;
+  top: 6px;
+  right: 8px;
+  background: rgba(255,255,255,0.85);
   border: none;
-  font-size: 1.2rem;
+  font-size: 1.5rem;        /* ✅ diperbesar dari 1.2rem → 1.5rem */
   cursor: pointer;
   z-index: 2;
-  padding: 0;
+  padding: 4px 6px;         /* ✅ tambah padding agar area klik lebih luas */
+  border-radius: 8px;
   line-height: 1;
-  opacity: 0.2;
+  opacity: 0.3;
   filter: grayscale(1);
-  transition: opacity 0.2s, transform 0.2s, filter 0.2s;
+  transition: opacity 0.2s, transform 0.2s, filter 0.2s, background 0.2s;
 }
 
-.bookmark-btn:hover { opacity: 0.65; transform: scale(1.2); }
+.bookmark-btn:hover {
+  opacity: 0.8;
+  transform: scale(1.15);
+  background: rgba(255,255,255,0.95);
+}
 
 .bookmark-btn.bookmark-active {
   opacity: 1;
   filter: drop-shadow(0 1px 4px rgba(83, 197, 201, 0.6));
+  background: rgba(255,255,255,0.95);
 }
 
 /* ════════════════════════════════════
