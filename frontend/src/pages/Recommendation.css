@@ -124,8 +124,8 @@
 ════════════════════════════════════ */
 .medicine-card {
   border-radius: 16px;
-  border: 1px solid #e8e8e8 !important;  /* sama dgn SearchMedicine */
-  background-color: #ffffff;              /* putih, bukan abu-abu */
+  border: 1px solid #e8e8e8 !important;
+  background-color: #ffffff;
   transition: 0.3s;
   position: relative;
 }
@@ -135,10 +135,10 @@
   box-shadow: 0 8px 24px rgba(83, 197, 201, 0.18) !important;
 }
 
-/* Wrapper gambar — seragam SearchMedicine */
+/* Wrapper gambar */
 .medicine-image-wrap {
   height: 160px;
-  background-color: #ffffff;     /* putih, bukan abu-abu */
+  background-color: #ffffff;
   border-radius: 16px 16px 0 0;
   display: flex;
   align-items: center;
@@ -158,7 +158,6 @@
   min-height: 2.4em;
 }
 
-/* Badge kategori obat — sama dgn SearchMedicine */
 .kategori-badge-card {
   display: inline-block;
   font-size: 0.72rem;
@@ -174,7 +173,6 @@
   max-width: 100%;
 }
 
-/* Badge BPOM — sama dgn SearchMedicine */
 .bpom-badge {
   display: inline-flex;
   align-items: center;
@@ -332,7 +330,6 @@
   padding: 12px 16px;
 }
 
-/* ✅ Modal image wrap fixed size */
 .modal-image-wrap {
   background: #f0f0f0;
   padding: 12px;
@@ -421,3 +418,134 @@
 }
 
 .btn-lainnya-tutup:hover { border-color: #53c5c9; color: #53c5c9; background: #f0fafb; }
+
+/* ════════════════════════════════════
+   RIWAYAT PENYAKIT — CHECKBOX CHIPS
+════════════════════════════════════ */
+.riwayat-hint {
+  font-size: 0.78rem;
+  color: #888;
+  margin-bottom: 10px;
+  margin-top: -4px;
+}
+
+.riwayat-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.riwayat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 13px;
+  border-radius: 20px;
+  border: 1.5px solid #d0d0d0;
+  background: #f9f9f9;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: #555;
+  cursor: pointer;
+  -webkit-user-select: none;
+user-select: none;
+  transition: all 0.18s ease;
+  line-height: 1.4;
+}
+
+.riwayat-chip:hover {
+  border-color: #53c5c9;
+  color: #1a7a7d;
+  background: #f0fafb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(83, 197, 201, 0.18);
+}
+
+.riwayat-chip-active {
+  border-color: #53c5c9 !important;
+  background: linear-gradient(135deg, #e0f7f8, #d4f5f6) !important;
+  color: #1a7a7d !important;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(83, 197, 201, 0.25);
+}
+
+.riwayat-check {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #53c5c9;
+}
+
+/* Info bar yang muncul setelah ada pilihan */
+.riwayat-selected-info {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  background: #f0fafb;
+  border: 1px solid #b2ebef;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  color: #555;
+  margin-bottom: 8px;
+}
+
+.riwayat-clear-btn {
+  background: none;
+  border: 1px solid #bbb;
+  border-radius: 10px;
+  padding: 2px 8px;
+  font-size: 0.73rem;
+  color: #888;
+  cursor: pointer;
+  margin-left: auto;
+  transition: 0.2s;
+}
+
+.riwayat-clear-btn:hover {
+  border-color: #e05555;
+  color: #e05555;
+  background: #fff5f5;
+}
+
+/* ════════════════════════════════════
+   TAMBAHAN — tempel di bagian paling
+   bawah Recommendation.css Anda
+════════════════════════════════════ */
+ 
+/* Angka jumlah obat di dalam chip */
+.riwayat-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(83, 197, 201, 0.15);
+  color: #3fb2b6;
+  font-size: 0.68rem;
+  font-weight: 700;
+  border-radius: 20px;
+  padding: 0 5px;
+  margin-left: 4px;
+  min-width: 20px;
+  line-height: 1.6;
+  transition: all 0.18s ease;
+}
+ 
+.riwayat-chip-active .riwayat-count {
+  background: rgba(255, 255, 255, 0.35);
+  color: #1a7a7d;
+}
+ 
+/* Mini chip di summary profil card */
+.riwayat-summary-chip {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #1a7a7d;
+  background: linear-gradient(135deg, #e0f7f8, #d4f5f6);
+  border: 1.5px solid #53c5c9;
+  border-radius: 20px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}

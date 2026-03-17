@@ -18,6 +18,70 @@ STOPWORDS_ID = {
 
 
 # ════════════════════════════════════════════════════
+# ALIAS RIWAYAT PENYAKIT
+# Diverifikasi dari data DB nyata (db_obatotc):
+#
+# gangguan_hati  → 101 obat
+# gagal_jantung  →  65 obat
+# hipertensi     →  56 obat
+# diabetes       →  55 obat
+# gangguan_ginjal→  34 obat
+# tiroid         →  10 obat
+# asma           →   8 obat
+# tukak_lambung  →   5 obat
+#
+# Kolesterol(0), lupus(0) → DIHAPUS karena tidak ada di DB
+# ════════════════════════════════════════════════════
+ALIAS_RIWAYAT = {
+    # ── 101 obat ──
+    "gangguan hati": [
+        "gangguan hati", "penyakit hati", "kerusakan hati",
+        "hepatik", "hepatitis", "sirosis", "gagal hati",
+        "liver", "insufisiensi hati", "disfungsi hati",
+    ],
+    # ── 65 obat ──
+    "gagal jantung": [
+        "gagal jantung", "penyakit jantung", "kelainan jantung",
+        "aritmia", "kardiomiopati", "heart failure",
+        "gangguan jantung", "jantung koroner",
+    ],
+    # ── 56 obat ──
+    "hipertensi": [
+        "hipertensi", "tekanan darah tinggi", "darah tinggi",
+        "hipertensi berat", "hipertensi tidak terkontrol",
+    ],
+    # ── 55 obat ──
+    "diabetes": [
+        "diabetes", "diabetes melitus", "diabetik", "diabetis",
+        "dm ", "gula darah tinggi", "hiperglikemia",
+    ],
+    # ── 34 obat ──
+    "gangguan ginjal": [
+        "gangguan ginjal", "penyakit ginjal", "kerusakan ginjal",
+        "gagal ginjal", "renal", "insufisiensi ginjal",
+        "disfungsi ginjal", "gangguan fungsi ginjal",
+        "ginjal berat",  # muncul di DB: "gangguan ginjal berat"
+    ],
+    # ── 10 obat ──
+    "hipotiroid": [
+        "tiroid", "hipotiroid", "hipertiroid",
+        "gangguan tiroid", "penyakit tiroid", "tiroksin",
+    ],
+    # ── 8 obat ──
+    "asma": [
+        "asma", "asthma", "bronkospasme", "bronkial",
+        "penyakit paru", "ppok", "bronkitis",
+    ],
+    # ── 5 obat ──
+    "tukak lambung": [
+        "tukak lambung", "tukak peptik", "ulkus",
+        "maag", "gastritis", "gerd", "refluks",
+        "luka lambung", "ulserasi",
+    ],
+}
+
+
+# ════════════════════════════════════════════════════
 # TOKENISASI
 # ════════════════════════════════════════════════════
 def tokenize(text):
@@ -110,14 +174,30 @@ def cek_darurat(keluhan_text):
 
 # ════════════════════════════════════════════════════
 # FILTER KEAMANAN KEHAMILAN
-#   A = aman terbukti
-#   B = aman pada hewan              → AMAN
-#   C = risiko tidak dikesampingkan  → BOLEH + peringatan
-#   D = bukti risiko pada janin      → BLOKIR
-#   X = kontraindikasi absolut       → BLOKIR
 # ════════════════════════════════════════════════════
 KET_HAMIL_BLOKIR     = {"d", "x"}
 KET_HAMIL_PERINGATAN = {"c"}
+
+
+def _cek_kontraindikasi(kontra_text, riwayat_list):
+    """
+    Cek apakah ada riwayat penyakit yang cocok dengan teks kontraindikasi.
+    Menggunakan alias mapping yang diverifikasi dari data DB nyata.
+    """
+    kontra_lower = kontra_text.lower()
+    for penyakit in riwayat_list:
+        penyakit = penyakit.strip().lower()
+        if not penyakit:
+            continue
+        # Cek keyword utama
+        if penyakit in kontra_lower:
+            return True
+        # Cek alias / variasi kata dari DB
+        for alias in ALIAS_RIWAYAT.get(penyakit, []):
+            if alias in kontra_lower:
+                return True
+    return False
+
 
 def lolos_filter(obat, usia, jenis_kelamin, status_hamil, riwayat_penyakit):
     # ── Filter usia minimum ──
@@ -131,19 +211,22 @@ def lolos_filter(obat, usia, jenis_kelamin, status_hamil, riwayat_penyakit):
             except:
                 pass
 
-    # ── Filter kehamilan (D dan X diblokir) ──
+    # ── Filter kehamilan ──
     if jenis_kelamin == "perempuan" and status_hamil == "hamil":
         ket = (obat.ket_hamil or "").strip().lower()
         if ket in KET_HAMIL_BLOKIR:
             return False
 
-    # ── Filter riwayat penyakit / kontraindikasi ──
+    # ── Filter riwayat penyakit ──
     if riwayat_penyakit:
-        kontra = (obat.kontraindikasi_clean or "").lower()
-        for penyakit in riwayat_penyakit.split(","):
-            penyakit = penyakit.strip()
-            if penyakit and penyakit in kontra:
-                return False
+        kontra = (obat.kontraindikasi_clean or "")
+        riwayat_list = (
+            riwayat_penyakit
+            if isinstance(riwayat_penyakit, list)
+            else [r.strip() for r in riwayat_penyakit.split(",") if r.strip()]
+        )
+        if _cek_kontraindikasi(kontra, riwayat_list):
+            return False
 
     return True
 
@@ -167,13 +250,12 @@ def get_gambar_fallback(nama_obat, gambar_db):
         if os.path.exists(path):
             return gambar_db
 
-    nama_file_coba = [
+    for nama_file in [
         nama_obat.lower().replace(" ", "_") + ".jpg",
         nama_obat.lower().replace(" ", "_") + ".png",
         nama_obat.lower().replace(" ", "-") + ".jpg",
         nama_obat.lower().replace(" ", "") + ".jpg",
-    ]
-    for nama_file in nama_file_coba:
+    ]:
         path = os.path.join(FOLDER_GAMBAR, nama_file)
         if os.path.exists(path):
             return nama_file
