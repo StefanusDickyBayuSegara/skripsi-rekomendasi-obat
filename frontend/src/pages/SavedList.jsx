@@ -2,31 +2,60 @@ import React, { useState, useEffect } from "react";
 import Navbar from "../components/Navbar";
 import "./SavedList.css";
 
+const API_BASE = "http://localhost:5000";
+const getToken = () => localStorage.getItem("token");
+
 function SavedList() {
   const [savedList, setSavedList]       = useState([]);
   const [search, setSearch]             = useState("");
   const [selectedObat, setSelectedObat] = useState(null);
+  const [loading, setLoading]           = useState(true);
+  const [error, setError]               = useState(null);
 
+  // ── Ambil data dari API saat halaman dibuka ──────────────────────
   useEffect(() => {
-    const data = JSON.parse(localStorage.getItem("savedObat") || "[]");
-    setSavedList(data);
+    const fetchSaved = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`${API_BASE}/api/saved`, {
+          headers: { Authorization: `Bearer ${getToken()}` },
+        });
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.message || "Gagal mengambil data");
+        }
+        const data = await res.json();
+        setSavedList(Array.isArray(data) ? data : []);
+      } catch (err) {
+        setError(err.message || "Tidak dapat memuat daftar simpan.");
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchSaved();
   }, []);
 
-  const handleHapus = (id) => {
-    const updated = savedList.filter((item) => item.id !== id);
-    setSavedList(updated);
-    localStorage.setItem("savedObat", JSON.stringify(updated));
+  // ── Hapus dari API ───────────────────────────────────────────────
+  const handleHapus = async (savedId) => {
+    try {
+      const res = await fetch(`${API_BASE}/api/saved/${savedId}`, {
+        method : "DELETE",
+        headers: { Authorization: `Bearer ${getToken()}` },
+      });
+      if (!res.ok) throw new Error("Gagal menghapus");
+      setSavedList((prev) => prev.filter((item) => item.saved_id !== savedId));
+      if (selectedObat && selectedObat.saved_id === savedId) setSelectedObat(null);
+    } catch {
+      alert("Gagal menghapus. Coba lagi.");
+    }
   };
 
-  const filtered = savedList.filter((item) =>
-    (item.nama_obat || item.name || "").toLowerCase().includes(search.toLowerCase())
-  );
-
+  // ── Helper field ─────────────────────────────────────────────────
   const get = (item, ...keys) => {
     for (const k of keys) { if (item[k] && item[k] !== "-") return item[k]; }
     return "-";
   };
-
   const getNamaObat  = (item) => get(item, "nama_obat", "name");
   const getKategori  = (item) => get(item, "kategori_penyakit", "kategori");
   const getKomposisi = (item) => get(item, "komposisi_clean", "komposisi");
@@ -39,14 +68,19 @@ function SavedList() {
   const getStatus    = (item) => get(item, "status_obat_label", "statusObat");
   const getGambar    = (item) => {
     if (item.image && item.image.startsWith("http")) return item.image;
-    if (item.gambar) return `http://localhost:5000/static/images/${item.gambar}`;
+    if (item.gambar) return `${API_BASE}/static/images/${item.gambar}`;
     return null;
   };
 
-  // ✅ Komponen gambar seragam dengan SearchMedicine
+  const filtered = savedList.filter((item) =>
+    getNamaObat(item).toLowerCase().includes(search.toLowerCase())
+  );
+
+  // ── Komponen gambar ──────────────────────────────────────────────
   function SavedImg({ src, name }) {
     const [err, setErr] = useState(false);
-    const inisial = (name || "?").split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
+    const inisial = (name || "?")
+      .split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
     if (!src || err) {
       return (
@@ -57,10 +91,8 @@ function SavedList() {
       );
     }
     return (
-      <img
-        src={src}
-        alt={name}
-        style={{ width: "100%", height: "100%", objectFit: "contain", objectPosition: "center", padding: "8px" }}
+      <img src={src} alt={name}
+        style={{ width:"100%", height:"100%", objectFit:"contain", objectPosition:"center", padding:"8px" }}
         onError={() => setErr(true)}
       />
     );
@@ -69,33 +101,44 @@ function SavedList() {
   return (
     <div className="savedlist-page">
       <Navbar />
-
       <div className="container-fluid px-4 mt-4 pb-5">
         <h4 className="savedlist-title">Daftar Simpan</h4>
 
         {/* Search */}
         <div className="savedlist-search-wrap mb-3">
           <span className="search-icon">🔍</span>
-          <input
-            type="text"
-            className="savedlist-search"
+          <input type="text" className="savedlist-search"
             placeholder="Cari Obat yang di simpan"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={search} onChange={(e) => setSearch(e.target.value)}
           />
           {search && (
             <button className="search-clear" onClick={() => setSearch("")}>✕</button>
           )}
         </div>
 
-        {savedList.length > 0 && (
+        {/* Loading */}
+        {loading && (
+          <div className="text-center mt-5">
+            <div className="spinner-border text-info" role="status" />
+            <p className="mt-2 text-muted">Memuat daftar simpan...</p>
+          </div>
+        )}
+
+        {/* Error */}
+        {!loading && error && (
+          <div className="alert alert-warning mt-3">⚠️ {error}</div>
+        )}
+
+        {/* Deskripsi */}
+        {!loading && !error && savedList.length > 0 && (
           <p className="savedlist-desc">
             "Ini adalah obat-obatan yang telah Anda simpan. Anda dapat melihat
             detailnya atau menghapusnya kapan saja."
           </p>
         )}
 
-        {savedList.length === 0 && (
+        {/* Empty */}
+        {!loading && !error && savedList.length === 0 && (
           <div className="savedlist-empty">
             <div className="empty-icon">🔖</div>
             <h5>Belum ada obat yang disimpan</h5>
@@ -107,7 +150,8 @@ function SavedList() {
           </div>
         )}
 
-        {savedList.length > 0 && filtered.length === 0 && (
+        {/* Tidak ketemu search */}
+        {!loading && savedList.length > 0 && filtered.length === 0 && (
           <div className="text-center mt-4">
             <p className="text-muted">
               😕 Obat "<strong>{search}</strong>" tidak ditemukan di daftar simpan.
@@ -116,43 +160,33 @@ function SavedList() {
         )}
 
         {/* Grid */}
-        <div className="row g-3 mt-1">
-          {filtered.map((item) => {
-            const namaObat  = getNamaObat(item);
-            const gambarSrc = getGambar(item);
-
-            return (
-              <div className="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-6" key={item.id}>
+        {!loading && !error && (
+          <div className="row g-3 mt-1">
+            {filtered.map((item) => (
+              <div className="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-6" key={item.saved_id}>
                 <div className="card saved-card h-100 shadow-sm">
-
                   <div className="bookmark-icon saved">🔖</div>
-
-                  {/* ✅ wrapper fixed height seragam */}
                   <div className="saved-image-wrap">
-                    <SavedImg src={gambarSrc} name={namaObat} />
+                    <SavedImg src={getGambar(item)} name={getNamaObat(item)} />
                   </div>
-
                   <div className="card-body p-2 d-flex flex-column text-center">
-                    <p className="saved-name mb-1">{namaObat}</p>
+                    <p className="saved-name mb-1">{getNamaObat(item)}</p>
                     <small className="saved-kategori fw-bold mb-2">{getKategori(item)}</small>
-
                     <div className="d-flex gap-2 mt-auto">
-                      <button className="btn btn-detail flex-fill" onClick={() => setSelectedObat(item)}>
-                        Detail
-                      </button>
-                      <button className="btn btn-hapus flex-fill" onClick={() => handleHapus(item.id)}>
-                        Hapus
-                      </button>
+                      <button className="btn btn-detail flex-fill"
+                        onClick={() => setSelectedObat(item)}>Detail</button>
+                      <button className="btn btn-hapus flex-fill"
+                        onClick={() => handleHapus(item.saved_id)}>Hapus</button>
                     </div>
                   </div>
                 </div>
               </div>
-            );
-          })}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* ════ MODAL DETAIL ════ */}
+      {/* MODAL DETAIL */}
       {selectedObat && (
         <div className="modal-overlay" onClick={() => setSelectedObat(null)}>
           <div className="modal-box shadow-lg" onClick={(e) => e.stopPropagation()}>
@@ -161,7 +195,6 @@ function SavedList() {
             </div>
             <div className="modal-body-custom">
               <div className="text-center mb-3">
-                {/* ✅ modal image wrap fixed size */}
                 <div className="modal-image-wrap mx-auto">
                   <SavedImg src={getGambar(selectedObat)} name={getNamaObat(selectedObat)} />
                 </div>
@@ -188,15 +221,12 @@ function SavedList() {
               </div>
             </div>
             <div className="modal-footer-custom">
-              <button
-                className="btn btn-hapus-modal"
-                onClick={() => { handleHapus(selectedObat.id); setSelectedObat(null); }}
-              >
+              <button className="btn btn-hapus-modal"
+                onClick={() => handleHapus(selectedObat.saved_id)}>
                 🗑️ Hapus dari Simpan
               </button>
-              <button className="btn btn-info text-white" onClick={() => setSelectedObat(null)}>
-                Tutup
-              </button>
+              <button className="btn btn-info text-white"
+                onClick={() => setSelectedObat(null)}>Tutup</button>
             </div>
           </div>
         </div>

@@ -1,4 +1,6 @@
-from flask import request, jsonify
+import jwt
+import datetime
+from flask import request, jsonify, current_app
 from backend import db
 from backend.model.user import User
 
@@ -38,7 +40,24 @@ def api_login():
     if user.password != password:
         return jsonify({"message": "Password salah"}), 401
 
+    # ── Buat JWT token ──────────────────────────────────────────
+    # Token berisi user_id dan expired 7 hari
+    # SECRET_KEY dari config Flask dipakai untuk tanda tangan token
+    token = jwt.encode(
+        {
+            "user_id": user.id,
+            "exp"    : datetime.datetime.utcnow() + datetime.timedelta(days=7)
+        },
+        current_app.config["SECRET_KEY"],
+        algorithm="HS256"
+    )
+
     return jsonify({
         "message": "Login berhasil",
-        "user"   : {"id": user.id, "name": user.name, "email": user.email}
+        "token"  : token,          # ← token dikirim ke frontend
+        "user"   : {
+            "id"   : user.id,
+            "name" : user.name,
+            "email": user.email
+        }
     }), 200

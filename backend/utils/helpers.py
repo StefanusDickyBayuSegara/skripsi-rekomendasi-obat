@@ -1,7 +1,9 @@
 import os
 import math
 import re
-
+import jwt
+from functools import wraps
+from flask import request, jsonify, current_app
 
 # ════════════════════════════════════════════════════
 # STOPWORDS INDONESIA
@@ -261,3 +263,54 @@ def get_gambar_fallback(nama_obat, gambar_db):
             return nama_file
 
     return None
+
+# ════════════════════════════════════════════════════
+# JWT - TOKEN REQUIRED
+# ════════════════════════════════════════════════════
+# Decorator ini dipakai di saved_controller.py
+# Cara kerja:
+#   1. Baca token dari header: Authorization: Bearer <token>
+#   2. Decode token pakai SECRET_KEY
+#   3. Ambil user_id dari token → query ke tabel user
+#   4. Teruskan objek user sebagai current_user ke fungsi controller
+#
+# Contoh pakai:
+#   @token_required
+#   def api_get_saved(current_user):
+#       return jsonify({"user": current_user.name})
+# ════════════════════════════════════════════════════
+def token_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        # Import di sini untuk hindari circular import
+        from backend.model.user import User
+
+        token = None
+
+        # Ambil token dari header Authorization: Bearer eyJ...
+        auth_header = request.headers.get("Authorization", "")
+        if auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+
+        if not token:
+            return jsonify({"message": "Token tidak ditemukan. Silakan login."}), 401
+
+        try:
+            payload      = jwt.decode(
+                token,
+                current_app.config["SECRET_KEY"],
+                algorithms=["HS256"]
+            )
+            current_user = User.query.get(payload["user_id"])
+
+            if not current_user:
+                return jsonify({"message": "User tidak ditemukan"}), 401
+
+        except jwt.ExpiredSignatureError:
+            return jsonify({"message": "Sesi habis. Silakan login ulang."}), 401
+        except jwt.InvalidTokenError:
+            return jsonify({"message": "Token tidak valid."}), 401
+
+        return f(current_user, *args, **kwargs)
+
+    return decorated

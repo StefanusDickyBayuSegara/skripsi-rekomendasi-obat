@@ -11,3 +11,6 @@ class Config(object):
     SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://' + USERNAME + ':' + PASSWORD + '@' + HOST + '/' + DATABASE
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_RECORD_QUERIES = True
+    
+     # ↓ TAMBAHKAN INI — kunci untuk JWT token
+    SECRET_KEY = os.environ.get("SECRET_KEY", "kunci_rahasia_skripsi_obatotc_2026")
