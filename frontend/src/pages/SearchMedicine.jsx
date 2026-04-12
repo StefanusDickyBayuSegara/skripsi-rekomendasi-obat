@@ -3,12 +3,10 @@ import Navbar from "../components/Navbar";
 import { useSavedList } from "../hooks/Usesavedlist";
 import "./SearchMedicine.css";
 
-// ✅ Key disesuaikan dengan isi kolom kategori_bpom di database (Hijau/Biru/Merah)
 const BPOM_CONFIG = {
   "hijau" : { color: "#28a745", label: "Obat Bebas"          },
   "biru"  : { color: "#007bff", label: "Obat Bebas Terbatas" },
   "merah" : { color: "#dc3545", label: "Obat Keras"          },
-  // fallback jika nama lengkap
   "obat bebas"         : { color: "#28a745", label: "Obat Bebas"          },
   "obat bebas terbatas": { color: "#007bff", label: "Obat Bebas Terbatas" },
   "obat keras"         : { color: "#dc3545", label: "Obat Keras"          },
@@ -18,11 +16,8 @@ const BPOM_CONFIG = {
 
 function BpomBadge({ kategori }) {
   if (!kategori || kategori === "-" || kategori === "null") return null;
-
-  // Cari config dengan lowercase agar tidak sensitif huruf besar/kecil
   const key = kategori.trim().toLowerCase();
   const cfg = BPOM_CONFIG[key] || { color: "#6c757d", label: kategori };
-
   const dotStyle = {
     backgroundColor : cfg.color,
     width           : "12px",
@@ -33,7 +28,6 @@ function BpomBadge({ kategori }) {
     display         : "inline-block",
     flexShrink      : 0,
   };
-
   return (
     <span
       className="bpom-badge"
@@ -54,6 +48,9 @@ function SearchMedicine() {
   const [medicines, setMedicines]               = useState([]);
   const [loading, setLoading]                   = useState(true);
   const [toastMsg, setToastMsg]                 = useState("");
+
+  // ✅ BARU: state lightbox
+  const [lightboxImg, setLightboxImg]           = useState(null); // { src, name }
 
   const { isSaved, toggleSave } = useSavedList();
 
@@ -80,7 +77,6 @@ function SearchMedicine() {
             ? `http://localhost:5000/static/images/${item.gambar}`
             : null,
         }));
-        // 🔍 DEBUG: cek nilai kategori_bpom dari API (hapus setelah fix)
         const sample = formattedData.slice(0, 5).map(d => ({ nama: d.name, bpom: d.kategoriBpom }));
         console.log("🔍 Sample kategori_bpom:", sample);
         setMedicines(formattedData);
@@ -120,7 +116,6 @@ function SearchMedicine() {
     setSelectedKategori("");
   };
 
-  // ✅ Gambar mengisi wrapper sepenuhnya, ukuran seragam semua card
   function ObatImg({ src, name }) {
     const [err, setErr] = useState(false);
     const inisial = (name || "?").split(" ").slice(0, 2).map((w) => w[0]).join("").toUpperCase();
@@ -144,11 +139,11 @@ function SearchMedicine() {
         src={src}
         alt={name}
         style={{
-          width      : "100%",
-          height     : "100%",
-          objectFit  : "contain",
+          width         : "100%",
+          height        : "100%",
+          objectFit     : "contain",
           objectPosition: "center",
-          padding    : "4px",
+          padding       : "4px",
         }}
         onError={() => setErr(true)}
       />
@@ -184,7 +179,6 @@ function SearchMedicine() {
             onKeyDown={handleKeyDown}
             className="form-control search-input"
           />
-
           <select
             className="form-select kategori-select"
             value={selectedKategori}
@@ -195,11 +189,9 @@ function SearchMedicine() {
               <option key={kat} value={kat}>{kat}</option>
             ))}
           </select>
-
           <button className="btn btn-cari text-white px-4" onClick={handleSearch}>
             🔍 Cari
           </button>
-
           {(submittedSearch || selectedKategori) && (
             <button className="btn btn-reset px-3" onClick={handleReset}>
               ✕ Reset
@@ -236,7 +228,6 @@ function SearchMedicine() {
             <div className="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-6" key={item.id}>
               <div className="card medicine-card h-100 shadow-sm">
 
-                {/* ✅ Fix 2: bookmark diperbesar */}
                 <button
                   className={`bookmark-btn ${isSaved(item.id) ? "bookmark-active" : ""}`}
                   onClick={(e) => handleToggleSave(e, item)}
@@ -245,16 +236,22 @@ function SearchMedicine() {
                   🔖
                 </button>
 
-                {/* ✅ Gambar mengisi wrapper sepenuhnya */}
-                <div className="card-img-wrap">
+                {/* ✅ DIUBAH: card-img-wrap bisa diklik untuk lightbox */}
+                <div
+                  className={`card-img-wrap ${item.image ? "card-img-clickable" : ""}`}
+                  onClick={() => item.image && setLightboxImg({ src: item.image, name: item.name })}
+                  title={item.image ? "🔍 Klik untuk perbesar gambar" : ""}
+                >
                   <ObatImg src={item.image} name={item.name} />
+                  {/* ✅ Ikon zoom muncul saat hover (hanya jika ada gambar) */}
+                  {item.image && (
+                    <div className="img-zoom-hint">🔍</div>
+                  )}
                 </div>
 
                 <div className="card-body text-center d-flex flex-column p-2">
                   <h6 className="fw-bold medicine-name">{item.name}</h6>
-
                   <small className="text-muted mb-1">{item.kategori}</small>
-
                   {item.kategoriObat && item.kategoriObat !== "-" && (
                     <span
                       className="kategori-badge-card mb-1"
@@ -264,12 +261,9 @@ function SearchMedicine() {
                       💊 {item.kategoriObat}
                     </span>
                   )}
-
-                  {/* ✅ Fix 3: Badge BPOM */}
                   <div className="mb-2">
                     <BpomBadge kategori={item.kategoriBpom} />
                   </div>
-
                   <button
                     className="btn btn-info mt-auto text-white btn-sm"
                     onClick={() => setSelectedMedicine(item)}
@@ -289,10 +283,27 @@ function SearchMedicine() {
           <div className="modal-content shadow" onClick={(e) => e.stopPropagation()}>
             <h5 className="modal-title">Detail Obat</h5>
             <div className="modal-image">
-              <div style={{ height: "150px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+              {/* ✅ Gambar di modal juga bisa diklik untuk lightbox */}
+              <div
+                style={{
+                  height    : "150px",
+                  display   : "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor    : selectedMedicine.image ? "zoom-in" : "default",
+                  position  : "relative",
+                }}
+                onClick={() =>
+                  selectedMedicine.image &&
+                  setLightboxImg({ src: selectedMedicine.image, name: selectedMedicine.name })
+                }
+                title={selectedMedicine.image ? "🔍 Klik untuk perbesar" : ""}
+              >
                 <ObatImg src={selectedMedicine.image} name={selectedMedicine.name} />
+                {selectedMedicine.image && (
+                  <div className="modal-img-zoom-hint">🔍 Perbesar</div>
+                )}
               </div>
-              {/* ✅ Badge BPOM di modal */}
               <div className="mt-2">
                 <BpomBadge kategori={selectedMedicine.kategoriBpom} />
               </div>
@@ -302,7 +313,7 @@ function SearchMedicine() {
               {[
                 { label: "Nama Obat",        value: selectedMedicine.name           },
                 { label: "Jenis Obat",        value: selectedMedicine.kategoriObat   },
-                { label: "Status BPOM",       value: selectedMedicine.kategoriBpom   }, // ✅ tambah
+                { label: "Status BPOM",       value: selectedMedicine.kategoriBpom   },
                 { label: "Komposisi",         value: selectedMedicine.komposisi      },
                 { label: "Kategori Penyakit", value: selectedMedicine.kategori       },
                 { label: "Indikasi",          value: selectedMedicine.indikasi       },
@@ -331,6 +342,35 @@ function SearchMedicine() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ✅ BARU: LIGHTBOX MODAL */}
+      {lightboxImg && (
+        <div
+          className="lightbox-overlay"
+          onClick={() => setLightboxImg(null)}
+        >
+          {/* Nama obat */}
+          <p className="lightbox-title">{lightboxImg.name}</p>
+
+          {/* Gambar */}
+          <img
+            src={lightboxImg.src}
+            alt={lightboxImg.name}
+            className="lightbox-img"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {/* Tombol tutup */}
+          <button
+            className="lightbox-close-btn"
+            onClick={() => setLightboxImg(null)}
+          >
+            ✕ Tutup
+          </button>
+
+          <p className="lightbox-hint">Klik di luar gambar untuk menutup</p>
         </div>
       )}
     </div>

@@ -5,10 +5,6 @@ import "./Recommendation.css";
 
 // ════════════════════════════════════════════════════
 // Daftar pilihan riwayat penyakit
-// Diurutkan berdasarkan jumlah obat yang terpengaruh di DB:
-// gangguan_hati(101) > gagal_jantung(65) > hipertensi(56) >
-// diabetes(55) > gangguan_ginjal(34) > tiroid(10) >
-// asma(8) > tukak_lambung(5)
 // ════════════════════════════════════════════════════
 const RIWAYAT_OPTIONS = [
   { value: "gangguan hati",  label: "🫀 Gangguan Hati",      count: 101 },
@@ -88,7 +84,12 @@ function BpomBadge({ kategori }) {
 // ════════════════════════════════════════════════════
 // Card Obat
 // ════════════════════════════════════════════════════
-function ObatCard({ item, index, isSaved, onToggleSave, onDetail, isTop5 = false }) {
+function ObatCard({ item, index, isSaved, onToggleSave, onDetail, isTop5 = false, onLightbox }) {
+  const gambarValid = item.gambar && item.gambar !== "null" && item.gambar !== "undefined" && item.gambar !== "-";
+  const imgSrc = gambarValid
+    ? (item.gambar.startsWith("http") ? item.gambar : `http://localhost:5000/static/images/${item.gambar}`)
+    : null;
+
   return (
     <div className={`card medicine-card h-100 shadow-sm ${isTop5 ? "top5-card" : ""}`}>
       {isTop5 && (
@@ -104,8 +105,13 @@ function ObatCard({ item, index, isSaved, onToggleSave, onDetail, isTop5 = false
         🔖
       </button>
 
-      <div className="medicine-image-wrap">
+      <div
+        className={`medicine-image-wrap ${imgSrc ? "rec-img-clickable" : ""}`}
+        onClick={() => imgSrc && onLightbox({ src: imgSrc, name: item.nama_obat })}
+        title={imgSrc ? "🔍 Klik untuk perbesar gambar" : ""}
+      >
         <ObatImage gambar={item.gambar} namaObat={item.nama_obat} />
+        {imgSrc && <div className="rec-img-zoom-hint">🔍</div>}
       </div>
 
       <div className="card-body text-center d-flex flex-column p-2">
@@ -153,6 +159,7 @@ function Recommendation() {
   const [selectedObat, setSelectedObat] = useState(null);
   const [toastMsg, setToastMsg]         = useState("");
   const [showLainnya, setShowLainnya]   = useState(false);
+  const [lightboxImg, setLightboxImg]   = useState(null);
 
   const { isSaved, toggleSave } = useSavedList();
 
@@ -211,6 +218,13 @@ function Recommendation() {
   const handleKeyDown = (e) => { if (e.key === "Enter") handleCari(); };
   const hasilLainnya = hasilObat.slice(5);
 
+  const getImgSrc = (item) => {
+    if (!item) return null;
+    const gambar = item.gambar;
+    if (!gambar || gambar === "null" || gambar === "undefined" || gambar === "-") return null;
+    return gambar.startsWith("http") ? gambar : `http://localhost:5000/static/images/${gambar}`;
+  };
+
   return (
     <div className="recommendation-page">
       <Navbar />
@@ -249,6 +263,15 @@ function Recommendation() {
                           return <span key={v} className="riwayat-summary-chip">{opt ? opt.label : v}</span>;
                         })}
                       </div>
+                    </div>
+                  )}
+                  {/* ✅ BARU: tampilkan info jika tidak ada riwayat dipilih */}
+                  {profil.riwayat_penyakit.length === 0 && (
+                    <div className="col-12">
+                      <small className="text-muted">Riwayat Penyakit</small>
+                      <p className="mb-0" style={{ fontSize: "0.82rem", color: "#888" }}>
+                        Tidak ada — semua obat ditampilkan
+                      </p>
                     </div>
                   )}
                 </div>
@@ -313,7 +336,8 @@ function Recommendation() {
                       {top5Obat.map((item, index) => (
                         <div className="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-6" key={item.id}>
                           <ObatCard item={item} index={index} isSaved={isSaved}
-                            onToggleSave={handleToggleSave} onDetail={setSelectedObat} isTop5={true} />
+                            onToggleSave={handleToggleSave} onDetail={setSelectedObat}
+                            isTop5={true} onLightbox={setLightboxImg} />
                         </div>
                       ))}
                     </div>
@@ -331,7 +355,8 @@ function Recommendation() {
                           {hasilLainnya.map((item, index) => (
                             <div className="col-xl-2 col-lg-3 col-md-4 col-sm-6 col-6" key={item.id}>
                               <ObatCard item={item} index={index + 5} isSaved={isSaved}
-                                onToggleSave={handleToggleSave} onDetail={setSelectedObat} isTop5={false} />
+                                onToggleSave={handleToggleSave} onDetail={setSelectedObat}
+                                isTop5={false} onLightbox={setLightboxImg} />
                             </div>
                           ))}
                         </div>
@@ -363,6 +388,7 @@ function Recommendation() {
                   value={profil.usia} min={1} max={120}
                   onChange={(e) => setProfil({ ...profil, usia: e.target.value })} />
               </div>
+
               {/* Jenis Kelamin */}
               <div className="mb-3">
                 <label className="form-label fw-semibold">Jenis Kelamin</label>
@@ -381,6 +407,7 @@ function Recommendation() {
                   </div>
                 </div>
               </div>
+
               {/* Status Hamil */}
               {profil.jenis_kelamin === "perempuan" && (
                 <div className="mb-3 status-hamil-box">
@@ -404,10 +431,18 @@ function Recommendation() {
 
               {/* ════ Riwayat Penyakit ════ */}
               <div className="mb-1">
-                <label className="form-label fw-semibold">Riwayat Penyakit</label>
+                <div className="riwayat-label-row">
+                  <label className="form-label fw-semibold mb-0">Riwayat Penyakit</label>
+                  {/* ✅ BARU: badge opsional */}
+                  <span className="riwayat-opsional-badge">Opsional</span>
+                </div>
+
+                {/* ✅ BARU: hint yang lebih jelas */}
                 <p className="riwayat-hint">
-                  Pilih kondisi yang Anda miliki — obat berbahaya akan disaring otomatis
+                  Pilih kondisi yang Anda miliki — obat berbahaya akan disaring otomatis.{" "}
+                  <strong>Tidak tahu atau tidak punya? Biarkan kosong saja.</strong>
                 </p>
+
                 <div className="riwayat-grid">
                   {RIWAYAT_OPTIONS.map(({ value, label, count }) => {
                     const isChecked = profil.riwayat_penyakit.includes(value);
@@ -423,6 +458,7 @@ function Recommendation() {
                     );
                   })}
                 </div>
+
                 {profil.riwayat_penyakit.length > 0 && (
                   <div className="riwayat-selected-info">
                     <span>✅ Dipilih: </span>
@@ -438,6 +474,15 @@ function Recommendation() {
                     </button>
                   </div>
                 )}
+
+                {/* ✅ BARU: info box "tidak tahu?" — hanya muncul jika belum ada yang dipilih */}
+                {profil.riwayat_penyakit.length === 0 && (
+                  <div className="riwayat-info-box">
+                    💡 <strong>Tidak tahu riwayat penyakit Anda?</strong>{" "}
+                    Biarkan kosong — sistem tetap memberikan rekomendasi terbaik tanpa penyaringan tambahan.
+                  </div>
+                )}
+
                 <small className="text-muted">
                   Angka pada setiap kondisi menunjukkan jumlah obat yang akan disaring.
                 </small>
@@ -460,8 +505,23 @@ function Recommendation() {
             </div>
             <div className="modal-body-custom">
               <div className="text-center mb-3">
-                <div className="modal-image-wrap mx-auto" style={{ width: "160px", height: "160px" }}>
+                <div
+                  className="modal-image-wrap mx-auto"
+                  style={{
+                    width: "160px", height: "160px",
+                    cursor: getImgSrc(selectedObat) ? "zoom-in" : "default",
+                    position: "relative",
+                  }}
+                  onClick={() => {
+                    const src = getImgSrc(selectedObat);
+                    if (src) setLightboxImg({ src, name: selectedObat.nama_obat });
+                  }}
+                  title={getImgSrc(selectedObat) ? "🔍 Klik untuk perbesar" : ""}
+                >
                   <ObatImage gambar={selectedObat.gambar} namaObat={selectedObat.nama_obat} />
+                  {getImgSrc(selectedObat) && (
+                    <div className="modal-img-zoom-hint">🔍 Perbesar</div>
+                  )}
                 </div>
                 <div className="mt-2"><BpomBadge kategori={selectedObat.kategori_bpom} /></div>
                 <p className="text-muted small mt-1">Informasi Produk</p>
@@ -512,6 +572,23 @@ function Recommendation() {
               <button className="btn btn-info text-white" onClick={() => setSelectedObat(null)}>Tutup</button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ════ LIGHTBOX MODAL ════ */}
+      {lightboxImg && (
+        <div className="lightbox-overlay" onClick={() => setLightboxImg(null)}>
+          <p className="lightbox-title">{lightboxImg.name}</p>
+          <img
+            src={lightboxImg.src}
+            alt={lightboxImg.name}
+            className="lightbox-img"
+            onClick={(e) => e.stopPropagation()}
+          />
+          <button className="lightbox-close-btn" onClick={() => setLightboxImg(null)}>
+            ✕ Tutup
+          </button>
+          <p className="lightbox-hint">Klik di luar gambar untuk menutup</p>
         </div>
       )}
     </div>

@@ -86,9 +86,9 @@ function Login() {
               </button>
             </form>
 
-            <Link to="/feedback">
+            <Link to="/">
               <button className="btn btn-outline-dark w-100 mb-3">
-                ← Back to Feedback
+                ← Back to Landing Page
               </button>
             </Link>
 

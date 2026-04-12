@@ -11,6 +11,7 @@ function SavedList() {
   const [selectedObat, setSelectedObat] = useState(null);
   const [loading, setLoading]           = useState(true);
   const [error, setError]               = useState(null);
+  const [lightboxImg, setLightboxImg] = useState(null);
 
   // ── Ambil data dari API saat halaman dibuka ──────────────────────
   useEffect(() => {
@@ -91,10 +92,20 @@ function SavedList() {
       );
     }
     return (
-      <img src={src} alt={name}
-        style={{ width:"100%", height:"100%", objectFit:"contain", objectPosition:"center", padding:"8px" }}
-        onError={() => setErr(true)}
-      />
+      <img
+    src={src}
+    alt={name}
+    onClick={() => setLightboxImg({ src, name })} // 🔥 INI KUNCINYA
+    style={{
+      cursor: "zoom-in",
+      width: "100%",
+      height: "100%",
+      objectFit: "contain",
+      objectPosition: "center",
+      padding: "8px"
+    }}
+    onError={() => setErr(true)}
+  />
     );
   }
 
@@ -229,6 +240,32 @@ function SavedList() {
                 onClick={() => setSelectedObat(null)}>Tutup</button>
             </div>
           </div>
+        </div>
+      )}
+      
+      {/* ✅ LIGHTBOX MODAL */}
+      {lightboxImg && (
+        <div
+          className="lightbox-overlay"
+          onClick={() => setLightboxImg(null)}
+        >
+          <p className="lightbox-title">{lightboxImg.name}</p>
+
+          <img
+            src={lightboxImg.src}
+            alt={lightboxImg.name}
+            className="lightbox-img"
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          <button
+            className="lightbox-close-btn"
+            onClick={() => setLightboxImg(null)}
+          >
+            ✕ Tutup
+          </button>
+
+          <p className="lightbox-hint">Klik di luar gambar untuk menutup</p>
         </div>
       )}
     </div>
