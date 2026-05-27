@@ -36,7 +36,7 @@ function Login() {
           : data.user;
         localStorage.setItem("user", JSON.stringify(finalUser));
 
-        window.location.href = "/recommendation";
+        window.location.href = "/search";
       } else {
         alert(data.message || "Login gagal");
       }

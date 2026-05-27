@@ -17,6 +17,8 @@ def api_get_obat():
             "kategori_obat"       : obat.kategori_obat,
             "kategori_penyakit"   : obat.kategori_penyakit,
             "indikasi_clean"      : obat.indikasi_clean,
+            "aturan_pemakaian"    : obat.aturan_pemakaian,     # ✅ BARU
+            "interaksi_obat"      : obat.interaksi_obat,       # ✅ BARU
             "dosis_anak_clean"    : obat.dosis_anak_clean,
             "dosis_dewasa_clean"  : obat.dosis_dewasa_clean,
             "efeksamping"         : obat.efeksamping,
@@ -28,6 +30,8 @@ def api_get_obat():
             "ket_hamil"           : obat.ket_hamil,
             "gambar"              : obat.gambar,
             "kategori_bpom"       : obat.kategori_bpom,      # ✅ DITAMBAHKAN
+            "aturan_penjualan_online"  : obat.aturan_penjualan_online,   # ✅ BARU
+            "label_peringatan_bpom"    : obat.label_peringatan_bpom,     # ✅ BARU
         })
     return jsonify(result), 200
 

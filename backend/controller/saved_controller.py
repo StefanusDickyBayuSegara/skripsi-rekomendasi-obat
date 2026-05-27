@@ -2,6 +2,7 @@ from flask import request, jsonify
 from backend import db
 from backend.model.saved_obat import SavedObat
 from backend.utils.helpers import token_required
+from sqlalchemy import text
 import json
 
 
@@ -32,17 +33,38 @@ def api_save_obat(current_user):
         obat_id=obat_id
     ).first()
     if exists:
-        return jsonify({"message": "Obat sudah disimpan", "saved_id": exists.id}), 200
+        return jsonify({
+            "message" : "Obat sudah disimpan",
+            "saved_id": exists.id
+        }), 200
+
+    # ✅ AMBIL DATA LENGKAP DARI TABEL OBAT DULU
+    result = db.session.execute(
+        text("""
+            SELECT * FROM data_obat_hasil_preprocessing_ver_4_3
+            WHERE id = :obat_id
+        """),
+        {"obat_id": int(obat_id)}
+    ).fetchone()
+
+    if not result:
+        return jsonify({"message": "Obat tidak ditemukan"}), 404
+
+    # Konversi row ke dict
+    data_lengkap = dict(result._mapping)
 
     new_item = SavedObat(
         user_id   = current_user.id,
         obat_id   = obat_id,
-        data_obat = json.dumps(data)
+        data_obat = json.dumps(data_lengkap, default=str)
     )
     db.session.add(new_item)
     db.session.commit()
 
-    return jsonify({"message": "Berhasil disimpan", "saved_id": new_item.id}), 201
+    return jsonify({
+        "message" : "Berhasil disimpan",
+        "saved_id": new_item.id
+    }), 201
 
 
 # ── DELETE /api/saved/<id> → hapus satu simpanan ────────────────
@@ -50,7 +72,7 @@ def api_save_obat(current_user):
 def api_delete_saved(current_user, saved_id):
     item = SavedObat.query.filter_by(
         id      = saved_id,
-        user_id = current_user.id    # pastikan hanya bisa hapus milik sendiri
+        user_id = current_user.id
     ).first()
 
     if not item:

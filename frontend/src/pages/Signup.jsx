@@ -34,12 +34,10 @@ function Signup() {
 
       const data = await response.json();
 
-      if (response.ok) {
-        alert("Signup berhasil!");
-        setName("");
-        setEmail("");
-        setPassword("");
-        setConfirmPassword("");
+       if (response.ok) {
+        alert("Signup berhasil! Silakan login."); // ← DIUBAH pesannya
+        window.location.href = "/login";          // ← DITAMBAH redirect ke login
+        // setName(""), setEmail(""), setPassword(""), setConfirmPassword("") ← DIHAPUS
       } else {
         alert(data.message);
       }

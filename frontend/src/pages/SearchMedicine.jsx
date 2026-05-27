@@ -65,6 +65,10 @@ function SearchMedicine() {
           kategori      : item.kategori_penyakit   ?? "-",
           kategoriBpom  : item.kategori_bpom       ?? "-",
           indikasi      : item.indikasi_clean       ?? "-",
+          aturanPemakaian: item.aturan_pemakaian   ?? "-",   // ✅ BARU
+          interaksiObat : item.interaksi_obat      ?? "-",   // ✅ BARU
+          aturanJualOnline     : item.aturan_penjualan_online      ?? "-",  // ✅ BARU
+          labelPeringatanBpom  : item.label_peringatan_bpom        ?? "-",  // ✅ BARU
           dosisAnak     : item.dosis_anak_clean     ?? "-",
           dosis_dewasa  : item.dosis_dewasa_clean   ?? "-",
           efekSamping   : item.efeksamping          ?? "-",
@@ -317,6 +321,10 @@ function SearchMedicine() {
                 { label: "Komposisi",         value: selectedMedicine.komposisi      },
                 { label: "Kategori Penyakit", value: selectedMedicine.kategori       },
                 { label: "Indikasi",          value: selectedMedicine.indikasi       },
+                { label: "Aturan Pemakaian", value: selectedMedicine.aturanPemakaian }, // ✅ BARU
+                { label: "Interaksi Obat",    value: selectedMedicine.interaksiObat }, // ✅ BARU
+                { label: "Aturan Penjualan Online", value: selectedMedicine.aturanJualOnline }, // ✅ BARU
+                { label: "Label Peringatan BPOM",   value: selectedMedicine.labelPeringatanBpom }, // ✅ BARU
                 { label: "Dosis Anak",        value: selectedMedicine.dosisAnak      },
                 { label: "Dosis Dewasa",      value: selectedMedicine.dosis_dewasa   },
                 { label: "Efek Samping",      value: selectedMedicine.efekSamping    },

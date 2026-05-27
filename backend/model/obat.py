@@ -19,3 +19,7 @@ class Obat(db.Model):
     ket_hamil = db.Column(db.String(100))
     gambar = db.Column(db.String(255))
     kategori_bpom = db.Column(db.String(100))   # ✅ DITAMBAHKAN
+    aturan_pemakaian     = db.Column(db.Text)          # ✅ BARU
+    interaksi_obat       = db.Column(db.Text)          # ✅ BARU
+    aturan_penjualan_online  = db.Column(db.Text)       # ✅ BARU
+    label_peringatan_bpom    = db.Column(db.Text)       # ✅ BARU

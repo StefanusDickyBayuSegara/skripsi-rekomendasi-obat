@@ -5,9 +5,14 @@ import jwt
 from functools import wraps
 from flask import request, jsonify, current_app
 
-# ════════════════════════════════════════════════════
+# SASTRAWI — STEMMING BAHASA INDONESIA
+
+from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
+_factory = StemmerFactory()
+_stemmer = _factory.create_stemmer()
+
 # STOPWORDS INDONESIA
-# ════════════════════════════════════════════════════
+
 STOPWORDS_ID = {
     "dan", "atau", "yang", "untuk", "dengan", "pada", "di", "ke", "dari",
     "ini", "itu", "adalah", "dalam", "tidak", "ada", "juga", "serta",
@@ -62,7 +67,7 @@ ALIAS_RIWAYAT = {
         "gangguan ginjal", "penyakit ginjal", "kerusakan ginjal",
         "gagal ginjal", "renal", "insufisiensi ginjal",
         "disfungsi ginjal", "gangguan fungsi ginjal",
-        "ginjal berat",  # muncul di DB: "gangguan ginjal berat"
+        "ginjal berat",
     ],
     # ── 10 obat ──
     "hipotiroid": [
@@ -84,15 +89,28 @@ ALIAS_RIWAYAT = {
 
 
 # ════════════════════════════════════════════════════
-# TOKENISASI
+# PREPROCESSING — TOKENISASI LENGKAP
+# Urutan step:
+#   1. Lowercasing          → semua huruf jadi kecil
+#   2. Punctuation Removal  → hapus tanda baca & simbol
+#   3. Tokenization         → pecah jadi list kata
+#   4. Stopword Removal     → buang kata tidak penting
+#   5. Stemming             → ubah ke bentuk kata dasar
 # ════════════════════════════════════════════════════
 def tokenize(text):
     if not text:
         return []
+    # Step 1 — Lowercasing
     text = text.lower()
+    # Step 2 — Punctuation Removal
     text = re.sub(r'[^a-z0-9\s]', ' ', text)
+    # Step 3 — Tokenization
     tokens = [t for t in text.split() if len(t) > 1]
-    return [t for t in tokens if t not in STOPWORDS_ID]
+    # Step 4 — Stopword Removal
+    tokens = [t for t in tokens if t not in STOPWORDS_ID]
+    # Step 5 — Stemming (Sastrawi)
+    tokens = [_stemmer.stem(t) for t in tokens]
+    return tokens
 
 
 # ════════════════════════════════════════════════════
@@ -151,7 +169,7 @@ def hitung_skor_relevansi(keluhan_tokens, indikasi_tokens, cosine_score):
     if precision + recall > 0:
         f1 = 2 * precision * recall / (precision + recall)
 
-    skor_akhir = (0.65 * cosine_score) + (0.35 * f1)
+    skor_akhir = (0.60 * cosine_score) + (0.40 * f1)
     return round(skor_akhir, 4)
 
 
@@ -182,19 +200,13 @@ KET_HAMIL_PERINGATAN = {"c"}
 
 
 def _cek_kontraindikasi(kontra_text, riwayat_list):
-    """
-    Cek apakah ada riwayat penyakit yang cocok dengan teks kontraindikasi.
-    Menggunakan alias mapping yang diverifikasi dari data DB nyata.
-    """
     kontra_lower = kontra_text.lower()
     for penyakit in riwayat_list:
         penyakit = penyakit.strip().lower()
         if not penyakit:
             continue
-        # Cek keyword utama
         if penyakit in kontra_lower:
             return True
-        # Cek alias / variasi kata dari DB
         for alias in ALIAS_RIWAYAT.get(penyakit, []):
             if alias in kontra_lower:
                 return True
@@ -264,30 +276,16 @@ def get_gambar_fallback(nama_obat, gambar_db):
 
     return None
 
+
 # ════════════════════════════════════════════════════
 # JWT - TOKEN REQUIRED
-# ════════════════════════════════════════════════════
-# Decorator ini dipakai di saved_controller.py
-# Cara kerja:
-#   1. Baca token dari header: Authorization: Bearer <token>
-#   2. Decode token pakai SECRET_KEY
-#   3. Ambil user_id dari token → query ke tabel user
-#   4. Teruskan objek user sebagai current_user ke fungsi controller
-#
-# Contoh pakai:
-#   @token_required
-#   def api_get_saved(current_user):
-#       return jsonify({"user": current_user.name})
 # ════════════════════════════════════════════════════
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        # Import di sini untuk hindari circular import
         from backend.model.user import User
 
         token = None
-
-        # Ambil token dari header Authorization: Bearer eyJ...
         auth_header = request.headers.get("Authorization", "")
         if auth_header.startswith("Bearer "):
             token = auth_header.split(" ")[1]

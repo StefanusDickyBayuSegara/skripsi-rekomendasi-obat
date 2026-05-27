@@ -144,6 +144,7 @@
   justify-content: center;
   overflow: hidden;
   border-bottom: 1px solid #f0f0f0;
+  position: relative;
 }
 
 .medicine-name {
@@ -421,8 +422,6 @@
 /* ════════════════════════════════════
    RIWAYAT PENYAKIT — label row
 ════════════════════════════════════ */
-
-/* ✅ BARU: baris label + badge opsional */
 .riwayat-label-row {
   display: flex;
   align-items: center;
@@ -430,7 +429,6 @@
   margin-bottom: 4px;
 }
 
-/* ✅ BARU: badge "Opsional" */
 .riwayat-opsional-badge {
   display: inline-block;
   font-size: 0.68rem;
@@ -454,7 +452,6 @@
   line-height: 1.5;
 }
 
-/* ✅ BARU: bold text di dalam hint */
 .riwayat-hint strong {
   color: #555;
   font-weight: 600;
@@ -539,7 +536,6 @@
   background: #fff5f5;
 }
 
-/* ✅ BARU: info box "tidak tahu riwayat?" */
 .riwayat-info-box {
   background: #f0fafb;
   border: 1px solid #b2ebef;
@@ -557,7 +553,6 @@
   font-weight: 600;
 }
 
-/* Angka jumlah obat di dalam chip */
 .riwayat-count {
   display: inline-flex;
   align-items: center;
@@ -579,7 +574,6 @@
   color: #1a7a7d;
 }
 
-/* Mini chip di summary profil card */
 .riwayat-summary-chip {
   display: inline-flex;
   align-items: center;
@@ -594,20 +588,14 @@
 }
 
 /* ════════════════════════════════════
-   LIGHTBOX — gambar klik untuk perbesar
+   LIGHTBOX
 ════════════════════════════════════ */
-.rec-img-clickable {
-  cursor: zoom-in;
-}
-
-.rec-img-clickable:hover {
-  background: #f0fafb;
-}
+.rec-img-clickable { cursor: zoom-in; }
+.rec-img-clickable:hover { background: #f0fafb; }
 
 .rec-img-zoom-hint {
   position: absolute;
-  bottom: 6px;
-  right: 8px;
+  bottom: 6px; right: 8px;
   background: rgba(83, 197, 201, 0.85);
   color: white;
   font-size: 0.75rem;
@@ -619,14 +607,11 @@
   font-weight: 600;
 }
 
-.rec-img-clickable:hover .rec-img-zoom-hint {
-  opacity: 1;
-}
+.rec-img-clickable:hover .rec-img-zoom-hint { opacity: 1; }
 
 .modal-img-zoom-hint {
   position: absolute;
-  bottom: 6px;
-  right: 8px;
+  bottom: 6px; right: 8px;
   background: rgba(83, 197, 201, 0.85);
   color: white;
   font-size: 0.75rem;
@@ -638,9 +623,7 @@
   font-weight: 600;
 }
 
-.modal-image-wrap:hover .modal-img-zoom-hint {
-  opacity: 1;
-}
+.modal-image-wrap:hover .modal-img-zoom-hint { opacity: 1; }
 
 .lightbox-overlay {
   position: fixed;
@@ -695,9 +678,7 @@
   transition: background 0.2s;
 }
 
-.lightbox-close-btn:hover {
-  background: rgba(255, 255, 255, 0.28);
-}
+.lightbox-close-btn:hover { background: rgba(255, 255, 255, 0.28); }
 
 .lightbox-hint {
   color: rgba(255, 255, 255, 0.4);
@@ -714,4 +695,418 @@
 @keyframes zoomInLb {
   from { transform: scale(0.82); opacity: 0; }
   to   { transform: scale(1);    opacity: 1; }
+}
+
+/* ════════════════════════════════════
+   BADGE STATUS PROFIL
+════════════════════════════════════ */
+.profil-status-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 10px;
+  border-radius: 20px;
+}
+
+.profil-status-empty {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffc107;
+}
+
+.profil-status-ok {
+  background: #d1e7dd;
+  color: #0f5132;
+  border: 1px solid #28a745;
+}
+
+.profile-card-empty {
+  border: 2px solid #ffc107 !important;
+}
+
+/* ── Profil empty state ── */
+.profil-empty-state {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profil-empty-desc {
+  font-size: 0.88rem;
+  color: #666;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.btn-isi-profil {
+  background: #53c5c9;
+  color: white;
+  border: none;
+  border-radius: 20px;
+  padding: 8px 20px;
+  font-weight: 600;
+  font-size: 0.88rem;
+  align-self: flex-start;
+  transition: 0.2s;
+}
+
+.btn-isi-profil:hover { background: #3fb2b6; color: white; }
+
+/* ── Search bar terkunci ── */
+.search-wrap-outer { max-width: 100%; }
+
+.search-disabled input,
+.search-disabled button {
+  opacity: 0.5;
+  cursor: not-allowed !important;
+  pointer-events: none;
+}
+
+.search-locked-hint {
+  font-size: 0.8rem;
+  color: #856404;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  border-radius: 8px;
+  padding: 6px 14px;
+  margin-top: 8px;
+  margin-bottom: 0;
+  display: inline-block;
+}
+
+/* ── Disclaimer medis ── */
+.disclaimer-medis {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #f0fafb;
+  border: 1px solid #b2ebef;
+  border-left: 4px solid #53c5c9;
+  border-radius: 10px;
+  padding: 12px 16px;
+  margin-bottom: 20px;
+  font-size: 0.82rem;
+  color: #555;
+  line-height: 1.6;
+}
+
+.disclaimer-icon {
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.disclaimer-text { margin: 0; }
+.disclaimer-text strong { color: #1a7a7d; }
+
+.disclaimer-modal {
+  background: #f0fafb;
+  border: 1px solid #b2ebef;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.78rem;
+  color: #555;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.top5-subtitle { font-size: 0.78rem; color: #7a9fa0; }
+
+
+/* ════════════════════════════════════════════════════════
+   TIPS KELUHAN
+════════════════════════════════════════════════════════ */
+
+.tips-keluhan-box {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 14px;
+  margin-top: 12px;
+  margin-bottom: 4px;
+  overflow: hidden;
+  animation: fadeInDown 0.3s ease;
+}
+
+/* ── Header toggle ── */
+.tips-keluhan-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.2s;
+}
+
+.tips-keluhan-header:hover { background: #f0fafb; }
+
+.tips-keluhan-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tips-keluhan-icon { font-size: 16px; flex-shrink: 0; }
+
+.tips-keluhan-title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #085041;
+}
+
+.tips-keluhan-subtitle {
+  font-size: 0.72rem;
+  color: #0F6E56;
+  margin-top: 1px;
+  line-height: 1.4;
+}
+
+.tips-keluhan-arrow {
+  font-size: 0.8rem;
+  color: #53c5c9;
+  font-weight: 700;
+  transition: transform 0.3s ease;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.tips-keluhan-arrow.arrow-up { transform: rotate(180deg); }
+
+/* ── Body konten ── */
+.tips-keluhan-body {
+  padding: 0 14px 14px;
+  border-top: 1px solid #f0f0f0;
+  animation: fadeInDown 0.2s ease;
+}
+
+.tips-section-label {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  color: #888;
+  text-transform: uppercase;
+  margin: 12px 0 8px;
+}
+
+/* ── Grid 2 kolom untuk kartu 4 tips ── */
+.tips-keluhan-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+/* ── Grid 3 kolom untuk contoh 6 kondisi ── */
+.tips-keluhan-grid-3 {
+  grid-template-columns: 1fr 1fr 1fr;
+}
+
+@media (max-width: 768px) {
+  .tips-keluhan-grid-3 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .tips-keluhan-grid,
+  .tips-keluhan-grid-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ── Kartu individual ── */
+.tips-keluhan-item {
+  background: #f0fafb;
+  border: 1px solid #b2ebef;
+  border-radius: 10px;
+  padding: 9px 12px;
+}
+
+.tips-keluhan-item-label {
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: #085041;
+  margin-bottom: 3px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.tips-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #53c5c9;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.tips-keluhan-item-why {
+  font-size: 0.68rem;
+  color: #888;
+  font-style: italic;
+  margin-bottom: 4px;
+  line-height: 1.4;
+}
+
+.tips-keluhan-item-contoh {
+  font-size: 0.75rem;
+  color: #555;
+  line-height: 1.55;
+}
+
+/* teks hijau em = contoh kata kunci yang disarankan */
+.tips-keluhan-item-contoh em {
+  font-style: normal;
+  color: #0F6E56;
+  font-weight: 600;
+}
+
+/* teks merah kecil = teks "✕ Hindari: ..." */
+.tips-hindari {
+  font-size: 0.68rem;
+  color: #A32D2D;
+  display: block;
+  margin-top: 3px;
+}
+
+/* ── Perbandingan singkat vs lengkap ── */
+.tips-compare-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+@media (max-width: 480px) {
+  .tips-compare-grid { grid-template-columns: 1fr; }
+}
+
+.tips-compare-bad,
+.tips-compare-good {
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.tips-compare-bad  { background: #fcebeb; border: 1px solid #F09595; }
+.tips-compare-good { background: #e0f7f8; border: 1px solid #5DCAA5; }
+
+.tips-compare-head {
+  font-size: 0.72rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+
+.tips-compare-bad  .tips-compare-head { color: #A32D2D; }
+.tips-compare-good .tips-compare-head { color: #085041; }
+
+.tips-compare-text {
+  font-size: 0.76rem;
+  line-height: 1.6;
+}
+
+.tips-compare-bad  .tips-compare-text { color: #791F1F; }
+.tips-compare-good .tips-compare-text { color: #0F6E56; }
+
+.tips-compare-text em   { font-style: italic; font-weight: 600; }
+.tips-compare-text span { font-size: 0.7rem; opacity: 0.85; }
+
+/* ── Peringatan kata darurat ── */
+.tips-darurat-warning {
+  background: #fcebeb;
+  border: 1px solid #F09595;
+  border-left: 4px solid #E24B4A;
+  border-radius: 0 10px 10px 0;
+  padding: 10px 12px;
+  margin-top: 10px;
+}
+
+.tips-darurat-head {
+  font-size: 0.73rem;
+  font-weight: 700;
+  color: #A32D2D;
+  margin-bottom: 7px;
+}
+
+.tips-darurat-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.tips-darurat-chip {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #791F1F;
+  background: #F7C1C1;
+  border: 1px solid #F09595;
+  border-radius: 20px;
+  padding: 2px 10px;
+  white-space: nowrap;
+}
+/* ════════════════════════════════════════════════════════
+   AKHIR CSS TIPS KELUHAN
+════════════════════════════════════════════════════════ */
+
+/* ════════════════════════════════════════════════════════
+   RELEVANSI BADGE — progress bar persentase
+   Tambahkan ke Recommendation.css
+════════════════════════════════════════════════════════ */
+ 
+.relevansi-wrap {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+ 
+/* Baris atas: bintang + label + angka persen */
+.relevansi-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+}
+ 
+.relevansi-stars {
+  font-size: 0.65rem;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+ 
+.relevansi-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  flex: 1;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+ 
+.relevansi-persen {
+  font-size: 0.78rem;
+  font-weight: 700;
+  flex-shrink: 0;
+  min-width: 32px;
+  text-align: right;
+}
+ 
+/* Track (background abu/warna muted) */
+.relevansi-track {
+  width: 100%;
+  height: 6px;
+  border-radius: 99px;
+  overflow: hidden;
+}
+ 
+/* Fill (bar berwarna bergerak) */
+.relevansi-fill {
+  height: 100%;
+  border-radius: 99px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
 }
